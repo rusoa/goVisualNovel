@@ -1,9 +1,8 @@
-# AVG Tacker
-A small helper for reading AVG in different language<br>
+# goVisualNovel
+A small helper for reading foreign AVG :)
 ## Compoments:
-1. Text extractor (need to menually edit args in main.cpp yet)
-2. Words segmentation (using mecab)
-3. Dictionary (in developing)
-4. online translation (in developing)
-## PS:
-1. For compiling, you need to install mecab v0.996 first (official website: http://taku910.github.io/mecab/), and edit installation path in main.cpp.
+1. H-Codes analyzer (immature yet)
+2. Text extractor
+3. Words segmentation (using mecab)
+4. Online dictionary (HuJiang Dict)
+5. Youdao translation API (need to provide AppKey and AppSecret by yourself)
