@@ -1,0 +1,4 @@
+LIBRARY ExtText
+
+EXPORTS
+ExtText @1

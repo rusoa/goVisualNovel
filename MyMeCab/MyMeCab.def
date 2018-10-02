@@ -1,0 +1,4 @@
+LIBRARY MyMeCab
+
+EXPORTS
+MeCabSegment @1
