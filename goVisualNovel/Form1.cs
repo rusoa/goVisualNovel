@@ -69,11 +69,7 @@ namespace goVisualNovel
         public void RefreshText()
         {
             WaitingLabel.Hide();
-
-            //clear last result
-            TextPanel.Controls.Clear();
-            TranslationPanel.Controls.Clear();
-            ExplanationBuffer.Clear();
+            ClearLastResult();
 
             int wordsCount = Program.TextTable.GetLength(0);
             if (wordsCount == 0) return;
@@ -141,6 +137,13 @@ namespace goVisualNovel
             TextPanel.Height = maxWordHeight * (raw + 1) + WordsRawMargin * raw;
 
             TranslationPanel.Location = new Point(TranslationPanel.Location.X, TextPanel.Bottom + TranslationTopMargin);
+        }
+
+        private void ClearLastResult()
+        {
+            TextPanel.Controls.Clear();
+            TranslationPanel.Controls.Clear();
+            ExplanationBuffer.Clear();
         }
 
         //it's a method that crosses between the threads, so we write like this
@@ -242,12 +245,14 @@ namespace goVisualNovel
                 if (strs.Length == 0)
                 {
                     explanation_dic.Text = NotFoundText;
-                    return;
                 }
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < strs.Length; i++)
-                    sb.Append(string.Format("{0}. {1}\n\n", i + 1, strs[i]));
-                explanation_dic.Text = sb.ToString();
+                else
+                {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < strs.Length; i++)
+                        sb.Append(string.Format("{0}. {1}\n\n", i + 1, strs[i]));
+                    explanation_dic.Text = sb.ToString();
+                }
                 ExplanationBuffer.Add(TextPanel.Controls.GetChildIndex(WordLabelNow), explanation_dic.Text);
             }
         }
@@ -282,14 +287,21 @@ namespace goVisualNovel
         }
         #endregion
 
+        #region contentMenuStrip
+        private void Clear_MenuStrip_Click(object sender, EventArgs e)
+        {
+            ClearLastResult();
+        }
+
         private void Setting_MenuStrip_Click(object sender, EventArgs e)
         {
             Program.ShowSettingsForm();
         }
 
-        private void Exit_Click(object sender, EventArgs e)
+        private void Exit_MenuStrip_Click(object sender, EventArgs e)
         {
             Program.myExit();
         }
+        #endregion
     }
 }

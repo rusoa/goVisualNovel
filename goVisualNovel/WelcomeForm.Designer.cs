@@ -35,12 +35,12 @@
             this.New = new System.Windows.Forms.Button();
             this.Delete = new System.Windows.Forms.Button();
             this.VNTable = new System.Windows.Forms.DataGridView();
-            this.Up = new System.Windows.Forms.Button();
-            this.Down = new System.Windows.Forms.Button();
-            this.Setting = new System.Windows.Forms.Button();
             this.VNName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.SpecialCode = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.WordsFilter = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Up = new System.Windows.Forms.Button();
+            this.Down = new System.Windows.Forms.Button();
+            this.Setting = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.VNTable)).BeginInit();
             this.SuspendLayout();
             // 
@@ -127,6 +127,27 @@
             this.VNTable.Click += new System.EventHandler(this.VNTable_Click);
             this.VNTable.Paint += new System.Windows.Forms.PaintEventHandler(this.VNTable_Paint);
             // 
+            // VNName
+            // 
+            this.VNName.HeaderText = "名称";
+            this.VNName.Name = "VNName";
+            this.VNName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.VNName.Width = 232;
+            // 
+            // SpecialCode
+            // 
+            this.SpecialCode.HeaderText = "特殊码";
+            this.SpecialCode.Name = "SpecialCode";
+            this.SpecialCode.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.SpecialCode.Width = 292;
+            // 
+            // WordsFilter
+            // 
+            this.WordsFilter.HeaderText = "词语过滤器(英文逗号分隔)";
+            this.WordsFilter.Name = "WordsFilter";
+            this.WordsFilter.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.WordsFilter.Width = 232;
+            // 
             // Up
             // 
             this.Up.Enabled = false;
@@ -159,27 +180,6 @@
             this.Setting.UseVisualStyleBackColor = true;
             this.Setting.Click += new System.EventHandler(this.Setting_Click);
             // 
-            // VNName
-            // 
-            this.VNName.HeaderText = "名称";
-            this.VNName.Name = "VNName";
-            this.VNName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.VNName.Width = 232;
-            // 
-            // SpecialCode
-            // 
-            this.SpecialCode.HeaderText = "特殊码";
-            this.SpecialCode.Name = "SpecialCode";
-            this.SpecialCode.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.SpecialCode.Width = 292;
-            // 
-            // WordsFilter
-            // 
-            this.WordsFilter.HeaderText = "词语过滤器(英文逗号分隔)";
-            this.WordsFilter.Name = "WordsFilter";
-            this.WordsFilter.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.WordsFilter.Width = 232;
-            // 
             // WelcomeForm
             // 
             this.AcceptButton = this.Accept;
@@ -196,6 +196,7 @@
             this.Controls.Add(this.Cancel);
             this.Controls.Add(this.Accept);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "WelcomeForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "goVisualNovel";

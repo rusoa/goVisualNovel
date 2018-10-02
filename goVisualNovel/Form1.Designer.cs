@@ -36,7 +36,7 @@ namespace goVisualNovel
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.Setting_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.Exit = new System.Windows.Forms.ToolStripMenuItem();
+            this.Exit_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.TextPanel = new System.Windows.Forms.Panel();
             this.TranslationPanel = new System.Windows.Forms.Panel();
             this.DicPanel = new System.Windows.Forms.Panel();
@@ -47,6 +47,7 @@ namespace goVisualNovel
             this.property_dic = new System.Windows.Forms.Label();
             this.pronunciation_dic = new System.Windows.Forms.Label();
             this.WaitingLabel = new System.Windows.Forms.Label();
+            this.Clear_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip1.SuspendLayout();
             this.DicPanel.SuspendLayout();
             this.SuspendLayout();
@@ -61,11 +62,12 @@ namespace goVisualNovel
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.Clear_MenuStrip,
             this.Setting_MenuStrip,
             this.toolStripSeparator1,
-            this.Exit});
+            this.Exit_MenuStrip});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 76);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 98);
             // 
             // Setting_MenuStrip
             // 
@@ -79,12 +81,12 @@ namespace goVisualNovel
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
             // 
-            // Exit
+            // Exit_MenuStrip
             // 
-            this.Exit.Name = "Exit";
-            this.Exit.Size = new System.Drawing.Size(180, 22);
-            this.Exit.Text = "退出";
-            this.Exit.Click += new System.EventHandler(this.Exit_Click);
+            this.Exit_MenuStrip.Name = "Exit_MenuStrip";
+            this.Exit_MenuStrip.Size = new System.Drawing.Size(180, 22);
+            this.Exit_MenuStrip.Text = "退出";
+            this.Exit_MenuStrip.Click += new System.EventHandler(this.Exit_MenuStrip_Click);
             // 
             // TextPanel
             // 
@@ -117,7 +119,6 @@ namespace goVisualNovel
             this.DicPanel.Controls.Add(this.pronunciation_dic);
             this.DicPanel.Location = new System.Drawing.Point(0, 0);
             this.DicPanel.Margin = new System.Windows.Forms.Padding(0);
-            this.DicPanel.MaximumSize = new System.Drawing.Size(250, 0);
             this.DicPanel.MinimumSize = new System.Drawing.Size(250, 353);
             this.DicPanel.Name = "DicPanel";
             this.DicPanel.Size = new System.Drawing.Size(250, 353);
@@ -188,10 +189,10 @@ namespace goVisualNovel
             this.property_dic.BackColor = System.Drawing.Color.Transparent;
             this.property_dic.Font = new System.Drawing.Font("宋体", 12F);
             this.property_dic.ForeColor = System.Drawing.Color.Silver;
-            this.property_dic.Location = new System.Drawing.Point(147, 64);
+            this.property_dic.Location = new System.Drawing.Point(180, 64);
             this.property_dic.Margin = new System.Windows.Forms.Padding(0);
             this.property_dic.Name = "property_dic";
-            this.property_dic.Size = new System.Drawing.Size(93, 16);
+            this.property_dic.Size = new System.Drawing.Size(60, 16);
             this.property_dic.TabIndex = 2;
             this.property_dic.Text = "動詞";
             this.property_dic.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -204,7 +205,7 @@ namespace goVisualNovel
             this.pronunciation_dic.Location = new System.Drawing.Point(10, 64);
             this.pronunciation_dic.Margin = new System.Windows.Forms.Padding(0);
             this.pronunciation_dic.Name = "pronunciation_dic";
-            this.pronunciation_dic.Size = new System.Drawing.Size(136, 16);
+            this.pronunciation_dic.Size = new System.Drawing.Size(170, 16);
             this.pronunciation_dic.TabIndex = 1;
             this.pronunciation_dic.Text = "「めざめる」";
             this.pronunciation_dic.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -218,7 +219,14 @@ namespace goVisualNovel
             this.WaitingLabel.Name = "WaitingLabel";
             this.WaitingLabel.Size = new System.Drawing.Size(319, 33);
             this.WaitingLabel.TabIndex = 6;
-            this.WaitingLabel.Text = "正在等待读取文字...";
+            this.WaitingLabel.Text = "正在等待提取文字...";
+            // 
+            // Clear_MenuStrip
+            // 
+            this.Clear_MenuStrip.Name = "Clear_MenuStrip";
+            this.Clear_MenuStrip.Size = new System.Drawing.Size(180, 22);
+            this.Clear_MenuStrip.Text = "清屏";
+            this.Clear_MenuStrip.Click += new System.EventHandler(this.Clear_MenuStrip_Click);
             // 
             // Form1
             // 
@@ -247,7 +255,7 @@ namespace goVisualNovel
         #endregion
         private System.Windows.Forms.NotifyIcon notifyIcon1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem Exit;
+        private System.Windows.Forms.ToolStripMenuItem Exit_MenuStrip;
         private System.Windows.Forms.ToolStripMenuItem Setting_MenuStrip;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.Panel TextPanel;
@@ -260,5 +268,6 @@ namespace goVisualNovel
         private System.Windows.Forms.Label spliter_dic;
         private System.Windows.Forms.Label copy_dic;
         private System.Windows.Forms.Label WaitingLabel;
+        private System.Windows.Forms.ToolStripMenuItem Clear_MenuStrip;
     }
 }
