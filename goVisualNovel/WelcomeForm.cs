@@ -154,7 +154,7 @@ namespace goVisualNovel
             string WordsFilter = VNTable[2, rowi].Value != null ? VNTable[2, rowi].Value.ToString() : "";
             try
             {
-                Program.StartExtText(VNName, "ja", SpecialCode, WordsFilter);
+                Program.StartExtText(VNName, "ja", SpecialCode, 2, "shift-jis", WordsFilter);
             }
             catch (ArgumentNullException)
             {

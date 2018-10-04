@@ -24,9 +24,9 @@ struct onSentenceEndArgsStruct
 };
 
 void __stdcall ExtText(
-    const wchar_t * ProcName,
+    const wchar_t * ModuleName,
     void * HookAddr,
-    int HookIndex,
+    int HookEspBias,
     bool HookValueAsAddr,
     int HookValueAsAddrBias,
     int BytesPerRead,

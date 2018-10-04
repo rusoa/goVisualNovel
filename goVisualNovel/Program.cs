@@ -14,9 +14,9 @@ namespace goVisualNovel
         #region import dll
         [DllImport("ExtText.dll")]
         public static extern void ExtText(
-            [MarshalAs(UnmanagedType.LPWStr)] string ProcName,
+            [MarshalAs(UnmanagedType.LPWStr)] string ModuleName,
             IntPtr HookAddr,
-            int HookIndex,
+            int HookEspBias,
             bool HookValueAsAddr,
             int HookValueAsAddrBias,
             int BytesPerRead,
@@ -71,12 +71,13 @@ namespace goVisualNovel
         }
 
         #region Ext Text and Translation
-        public static void StartExtText(string VNName, string Language, string SpecialCode, string WordsFilter)
+        public static void StartExtText(string VNName, string Language, string SpecialCode, int BytesPerRead, string ProcEncoding, string WordsFilter)
         {
             if (form1 != null && !form1.IsDisposed) form1.Close();
             StopExtText();
 
-            vn = new VisualNovel(VNName, Language, SpecialCode, WordsFilter);
+            SpecialDecoder sc = new SpecialDecoder(SpecialCode);
+            vn = new VisualNovel(VNName, Language, ProcEncoding, WordsFilter);
 
             int Mtid = GetCurrentThreadId();
             pExtBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(byte)) * EXT_BYTES_MAX_SIZE);
@@ -85,17 +86,16 @@ namespace goVisualNovel
             Marshal.WriteByte(pStopExtText, 0);
             ExtTextThread = new Thread(() =>
                 ExtText(
-                    vn.ProcName,
-                    vn.HookAddr,
-                    vn.HookIndex,
-                    vn.HookValueAsAddr,
-                    vn.HookValueAsAddrBias,
-                    vn.BytesPerRead,
+                    sc.ModuleName,
+                    sc.HookAddr,
+                    sc.HookEspBias,
+                    sc.HookValueAsAddr,
+                    sc.HookValueAsAddrBias,
+                    BytesPerRead,
                     Mtid,
                     pExtBuffer,
                     pStopExtText
-                )
-            );
+                ));
             ExtTextThread.IsBackground = true;
             ExtTextThread.Start();
 

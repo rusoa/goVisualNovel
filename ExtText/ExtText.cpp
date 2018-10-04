@@ -3,9 +3,9 @@
 using namespace std;
 
 void __stdcall ExtText(
-    const wchar_t * ProcName,
+    const wchar_t * ModuleName,
     void * HookAddr,
-    int HookIndex,
+    int HookEspBias,
     bool HookValueAsAddr,
     int HookValueAsAddrBias,
     int BytesPerRead,
@@ -17,7 +17,7 @@ void __stdcall ExtText(
     HANDLE hProc = NULL; //process handler of debugged process
     unsigned long dMainThreadId; //main thread id of debugged process
     void * BaseAddr; //module base addr that always be changed by alsr
-    void * pReg; //pointer to the register to read
+    void * pValue; //pointer to the register to read
     CONTEXT ctx;
     unsigned char OriginalCode; //backup the original code for recovering after break point error
     const unsigned char int3 = 0xCC; //the int3 break point code
@@ -28,7 +28,7 @@ void __stdcall ExtText(
 
     try
     {
-        for(pid = 0; pid == 0; pid = GetPidByName(ProcName))
+        for(pid = 0; pid == 0; pid = GetPidByName(ModuleName))
         {
             if(*StopExtText) return;
             Sleep(500);
@@ -41,37 +41,6 @@ void __stdcall ExtText(
 
         BaseAddr = GetBaseAddr(pid);
         HookAddr = (void *)((unsigned long)BaseAddr + (unsigned long)HookAddr);
-
-        switch(HookIndex)
-        {
-        case 0:
-            pReg = &ctx.Eax;
-            break;
-        case 1:
-            pReg = &ctx.Ecx;
-            break;
-        case 2:
-            pReg = &ctx.Edx;
-            break;
-        case 3:
-            pReg = &ctx.Ebx;
-            break;
-        case 4:
-            pReg = &ctx.Esi;
-            break;
-        case 5:
-            pReg = &ctx.Edi;
-            break;
-        case 6:
-            pReg = &ctx.Esp;
-            break;
-        case 7:
-            pReg = &ctx.Ebp;
-            break;
-        default:
-            throw "Unknown Hook Index";
-            break;
-        }
 
         if(!ReadProcessMemory(hProc, HookAddr, &OriginalCode, sizeof(BYTE), NULL))
             throw runtime_error("failed to read origin code");
@@ -121,18 +90,22 @@ void __stdcall ExtText(
                 ctx.ContextFlags = CONTEXT_FULL;
                 if(!GetThreadContext(hThread, &ctx)) throw runtime_error("failed to get thread context");
 
+                if(HookAddr == (void *)0x100) pValue = (char *)HookAddr + 1;
+                else if(HookEspBias > 0) pValue = (void *)(ctx.Esp + HookEspBias);
+                else pValue = (char *)&ctx.Esp + HookEspBias;
+
                 //read the bytes
                 for(int i = 0; i < BytesPerRead; i++)
                 {
                     if(HookValueAsAddr)
                     {
-                        if(!ReadProcessMemory(hProc, (void *)((unsigned long)pReg + HookValueAsAddrBias + i), ExtBuffer + seas.BytesLen++, sizeof(char), NULL))
+                        if(!ReadProcessMemory(hProc, (void *)((unsigned long)pValue + HookValueAsAddrBias + i), ExtBuffer + seas.BytesLen++, sizeof(char), NULL))
                             throw runtime_error("failed to read bytes");
                     }
                     else
                     {
                         //read 1 byte per loop from high to low, bias = BytesPerRead - i - 1
-                        *(ExtBuffer + seas.BytesLen++) = *((unsigned char *)((unsigned long)pReg + BytesPerRead - i - 1));
+                        *(ExtBuffer + seas.BytesLen++) = *((unsigned char *)((unsigned long)pValue + BytesPerRead - i - 1));
                     }
                     racer.reset();
                 }
