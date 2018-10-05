@@ -156,29 +156,9 @@ namespace goVisualNovel
             {
                 Program.StartExtText(VNName, "ja", SpecialCode, 2, "shift-jis", WordsFilter);
             }
-            catch (ArgumentNullException)
-            {
-                MessageBox.Show("名称和特殊码不能为空！");
-                return;
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                MessageBox.Show("参数超出范围！");
-                return;
-            }
-            catch (ArgumentException)
-            {
-                MessageBox.Show("特殊码解析错误！");
-                return;
-            }
-            catch (FormatException)
-            {
-                MessageBox.Show("特殊码解析错误！");
-                return;
-            }
             catch (Exception)
             {
-                MessageBox.Show("未知错误！");
+                MessageBox.Show("解析错误！");
                 return;
             }
             Close();

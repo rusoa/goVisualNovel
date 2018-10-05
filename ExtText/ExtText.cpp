@@ -4,26 +4,22 @@ using namespace std;
 
 void __stdcall ExtText(
     const wchar_t * ModuleName,
-    void * HookAddr,
-    int HookEspBias,
-    bool HookValueAsAddr,
-    int HookValueAsAddrBias,
-    int BytesPerRead,
+    struct Hooker * Hookers,
+    int HookersNum,
     int MainThreadId,
     unsigned char * ExtBuffer,
-    bool * StopExtText)
+    int ExtBufferSize,
+    bool * StopExtText
+)
 {
     unsigned long pid; //pid of debugged process
-    HANDLE hProc = NULL; //process handler of debugged process
+    HANDLE hProc = 0; //process handler of debugged process
     unsigned long dMainThreadId; //main thread id of debugged process
     void * BaseAddr; //module base addr that always be changed by alsr
-    void * pValue; //pointer to the register to read
-    CONTEXT ctx;
-    unsigned char OriginalCode; //backup the original code for recovering after break point error
-    const unsigned char int3 = 0xCC; //the int3 break point code
-    bool CodeChanged = false;
-    DEBUG_EVENT dbe;
-    struct onSentenceEndArgsStruct seas(MainThreadId, ExtBuffer, 0);
+    
+    unsigned char * OriginalCodes = new unsigned char[HookersNum]; //backup the original code for recovering after break point error
+    
+    struct onSentenceEndArgsStruct seas;
     Racer racer(WAIT_MILLISECOND, onSentenceEnd, (void *)&seas);
 
     try
@@ -40,139 +36,173 @@ void __stdcall ExtText(
         dMainThreadId = GetMtid(pid);
 
         BaseAddr = GetBaseAddr(pid);
-        HookAddr = (void *)((unsigned long)BaseAddr + (unsigned long)HookAddr);
 
-        if(!ReadProcessMemory(hProc, HookAddr, &OriginalCode, sizeof(BYTE), NULL))
-            throw runtime_error("failed to read origin code");
+        for(int i = 0; i < HookersNum; i++)
+        {
+            Hookers[i].Addr = (void *)((unsigned long)BaseAddr + (unsigned long)Hookers[i].Addr);
+            if(!ReadProcessMemory(hProc, Hookers[i].Addr, &OriginalCodes[i], sizeof(char), NULL))
+                throw runtime_error("failed to read origin code");
+        }
 
-        if(!WriteProcessMemory(hProc, HookAddr, &int3, sizeof(BYTE), NULL))
-            throw runtime_error("failed to set int3 break point");
-        CodeChanged = true;
+        for(int i = 0; i < HookersNum; i++)
+        {
+            if(!WriteProcessMemory(hProc, Hookers[i].Addr, &int3, sizeof(char), NULL))
+                throw runtime_error("failed to set int3 break point");
+        }
 
         if(!DebugActiveProcess(pid)) throw runtime_error("failed to enter debug mode");
 
+        CONTEXT ctx;
+        DEBUG_EVENT dbe;
+        void * pValue = 0;
+        void * SingleStepAddrBefore = 0;
+        seas.MainThreadId = MainThreadId;
+        seas.ExtBuffer = ExtBuffer;
+        seas.ExtBufferSize = ExtBufferSize;
+        seas.BytesLen = 0;
         for(;;)
         {
             //process control
             if(*StopExtText)
             {
                 DebugActiveProcessStop(pid);
-                if(CodeChanged) WriteProcessMemory(hProc, HookAddr, &OriginalCode, sizeof(char), NULL);
+                for(int i = 0; i < HookersNum; i++)
+                    WriteProcessMemory(hProc, Hookers[i].Addr, &OriginalCodes[i], sizeof(char), NULL);
+                delete OriginalCodes;
                 break;
             }
-
+            
+            //wait for debug event
             if(!WaitForDebugEvent(&dbe, DEBUG_LOOP_MAX_WAIT)) continue;
 
             //if the debugged program exit, then we exit too
             if(dbe.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT)
             {
                 DebugActiveProcessStop(pid);
+                delete OriginalCodes;
                 PostThreadMessage(MainThreadId, WM_EXT_TEXT_EXIT_PASSIVE, NULL, NULL);
                 break;
             }
 
-            //event that we do not care
-            if(!IsCaredEvent(dbe, HookAddr, dMainThreadId))
+            //first filter
+            if(dbe.dwThreadId != dMainThreadId || dbe.dwDebugEventCode != EXCEPTION_DEBUG_EVENT)
             {
                 ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_EXCEPTION_NOT_HANDLED);
-                continue;
             }
-
-            //first break
-            if(dbe.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_BREAKPOINT)
+            //int3 break
+            else if(dbe.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_BREAKPOINT)
             {
-                //timeout means a sentence is complete
-                if(!racer.status) racer.start();
-
                 HANDLE hThread = OpenThread(THREAD_ALL_ACCESS, false, dMainThreadId);
                 if(!hThread) throw runtime_error("failed to get thread handle");
-
                 ctx.ContextFlags = CONTEXT_FULL;
                 if(!GetThreadContext(hThread, &ctx)) throw runtime_error("failed to get thread context");
 
-                if(HookAddr == (void *)0x100) pValue = (char *)HookAddr + 1;
-                else if(HookEspBias > 0) pValue = (void *)(ctx.Esp + HookEspBias);
-                else pValue = (char *)&ctx.Esp + HookEspBias;
+                if(seas.BytesLen > ExtBufferSize - HookersNum * 2) seas.BytesLen = 0; //impact resistant
 
-                //read the bytes
-                for(int i = 0; i < BytesPerRead; i++)
+                int LastIdx = -1;
+                for(int i = 0; i < HookersNum; i++)
                 {
-                    if(HookValueAsAddr)
+                    if(Hookers[i].Addr != dbe.u.Exception.ExceptionRecord.ExceptionAddress) continue;
+
+                    LastIdx = i;
+
+                    if(!racer.status) racer.start();
+
+                    if(Hookers[i].EspBias < 0 && !Hookers[i].ValueAsAddr)
                     {
-                        if(!ReadProcessMemory(hProc, (void *)((unsigned long)pValue + HookValueAsAddrBias + i), ExtBuffer + seas.BytesLen++, sizeof(char), NULL))
-                            throw runtime_error("failed to read bytes");
+                        pValue = (char *)&ctx.Esp + Hookers[i].EspBias;
+                        for(int c = 0; c < Hookers[i].BytesPerRead; c++)
+                        {
+                            *(ExtBuffer + seas.BytesLen++) = *((char *)((unsigned long)pValue + Hookers[i].BytesPerRead - c - 1));
+                        }
                     }
                     else
                     {
-                        //read 1 byte per loop from high to low, bias = BytesPerRead - i - 1
-                        *(ExtBuffer + seas.BytesLen++) = *((unsigned char *)((unsigned long)pValue + BytesPerRead - i - 1));
+                        if(Hookers[i].EspBias < 0)
+                        {
+                            pValue = *(void **)((char *)&ctx.Esp + Hookers[i].EspBias);
+                        }
+                        else if(!Hookers[i].ValueAsAddr)
+                        {
+                            pValue = (void *)(ctx.Esp + Hookers[i].EspBias);
+                        }
+                        else
+                        {
+                            if(!ReadProcessMemory(hProc, (void *)(ctx.Esp + Hookers[i].EspBias), pValue, sizeof(void *), NULL))
+                                throw runtime_error("failed to read bytes");
+                        }
+                        for(int c = 0; c < Hookers[i].BytesPerRead; c++)
+                        {
+                            if(!ReadProcessMemory(hProc, (void *)((char *)pValue + Hookers[i].ValueAsAddrBias + c), ExtBuffer + seas.BytesLen++, sizeof(char), NULL))
+                                throw runtime_error("failed to read bytes");
+                        }
                     }
+
                     racer.reset();
                 }
+                if(LastIdx == -1)
+                {
+                    ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_EXCEPTION_NOT_HANDLED);
+                }
+                else
+                {
+                    //recover the original code
+                    if(!WriteProcessMemory(hProc, Hookers[LastIdx].Addr, &OriginalCodes[LastIdx], sizeof(char), NULL))
+                        throw runtime_error("failed to recover original code");
 
-                //recover the original code
-                if(!WriteProcessMemory(hProc, HookAddr, &OriginalCode, sizeof(char), NULL))
-                    throw runtime_error("failed to recover original code");
-                CodeChanged = false;
+                    //reset the process pointer and set to sigle-step-mode to arouse second break
+                    ctx.ContextFlags = CONTEXT_CONTROL;
+                    if(!GetThreadContext(hThread, &ctx))
+                        throw runtime_error("failed to get thread content");
+                    ctx.Eip = (unsigned long)Hookers[LastIdx].Addr;
+                    ctx.EFlags |= 0x100; //set the TF position as 1 in EFlags register to start sigle-step-mode
+                    ctx.ContextFlags = CONTEXT_CONTROL;
+                    if(!SetThreadContext(hThread, &ctx))
+                        throw runtime_error("failed to set thread content");
 
-                //reset the process pointer
-                ctx.ContextFlags = CONTEXT_CONTROL;
-                if(!GetThreadContext(hThread, &ctx))
-                    throw runtime_error("failed to get thread content");
-                ctx.Eip = (unsigned long)HookAddr;
-                ctx.ContextFlags = CONTEXT_CONTROL;
-                if(!SetThreadContext(hThread, &ctx))
-                    throw runtime_error("failed to set thread content");
+                    SingleStepAddrBefore = Hookers[LastIdx].Addr;
 
-                //impact resistant
-                if(seas.BytesLen >= EXT_BYTES_MAX_SIZE - 3) seas.BytesLen = 0;
-
-                //set to sigle-step-mode to arouse second break
-                ctx.ContextFlags = CONTEXT_CONTROL;
-                if(!GetThreadContext(hThread, &ctx)) throw runtime_error("failed to get thread content");
-                ctx.EFlags |= 0x100; //set the TF position as 1 in EFlags register to start sigle-step-mode
-                ctx.ContextFlags = CONTEXT_CONTROL;
-                if(!SetThreadContext(hThread, &ctx)) throw runtime_error("failed to set thread content");
+                    ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_CONTINUE);
+                }
             }
-
             //second break, reset the breakpoint
             else if(dbe.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_SINGLE_STEP)
             {
-                if(!WriteProcessMemory(hProc, HookAddr, &int3, sizeof(BYTE), NULL))
-                    throw runtime_error("failed to reset the int3 breakpoint");
-                CodeChanged = true;
+                if(SingleStepAddrBefore == 0)
+                {
+                    ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_EXCEPTION_NOT_HANDLED);
+                }
+                else
+                {
+                    if(!WriteProcessMemory(hProc, SingleStepAddrBefore, &int3, sizeof(BYTE), NULL))
+                        throw runtime_error("failed to reset the int3 breakpoint");
+                    ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_CONTINUE);
+                    SingleStepAddrBefore = 0;
+                }
             }
-
-            ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_CONTINUE);
+            else
+            {
+                ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_EXCEPTION_NOT_HANDLED);
+            }
         }
     }
-    catch(runtime_error)
+    catch(runtime_error e)
     {
         DebugActiveProcessStop(pid);
+        delete OriginalCodes;
         racer.stop();
-        if(CodeChanged) WriteProcessMemory(hProc, HookAddr, &OriginalCode, sizeof(char), NULL);
+        for(int i = 0; i < HookersNum; i++)
+            WriteProcessMemory(hProc, Hookers[i].Addr, &OriginalCodes, sizeof(char), NULL);
         PostThreadMessage(MainThreadId, WM_EXT_TEXT_EXIT_ERROR, NULL, NULL);
         return;
     }
-}
-
-inline bool IsCaredEvent(DEBUG_EVENT &dbe, void * HookAddr, unsigned long dMainThreadId)
-{
-    if(dbe.dwThreadId == dMainThreadId && dbe.dwDebugEventCode == EXCEPTION_DEBUG_EVENT)
-    {
-        if(dbe.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_BREAKPOINT && dbe.u.Exception.ExceptionRecord.ExceptionAddress == HookAddr)
-            return true;
-        if(dbe.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_SINGLE_STEP)
-            return true;
-    }
-    return false;
 }
 
 void onSentenceEnd(void * p)
 {
     struct onSentenceEndArgsStruct * pArgs = (struct onSentenceEndArgsStruct *)p;
     if(!pArgs->BytesLen) return;
-    for(int i = pArgs->BytesLen; i < EXT_BYTES_MAX_SIZE; i++) pArgs->ExtBuffer[i] = 0;
+    for(int i = pArgs->BytesLen; i < pArgs->ExtBufferSize; i++) pArgs->ExtBuffer[i] = 0;
     pArgs->BytesLen = 0;
     PostThreadMessage(pArgs-> MainThreadId, WM_EXT_TEXT_EXT, NULL, NULL);
 }

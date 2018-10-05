@@ -21,19 +21,31 @@ namespace goVisualNovel
 
         private static string[,] JaProcess(string text)
         {
-            const int MAX_SEG_BUFFER_SIZE = Program.EXT_BYTES_MAX_SIZE * 20; //associate with MyMeCab
-            IntPtr pSegBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(byte)) * MAX_SEG_BUFFER_SIZE);
-            MeCabSegment(text, pSegBuffer);
-            string SegStr = MyConverter.pBufferToString(pSegBuffer, MAX_SEG_BUFFER_SIZE, "utf-8");
+            int SegBufferSize = Program.EXT_BYTES_MAX_SIZE * 20;
+            IntPtr pSegBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(byte)) * SegBufferSize);
+            MeCabSegment(text, pSegBuffer, SegBufferSize);
+            string SegStr = MyConverter.pBufferToString(pSegBuffer, SegBufferSize, "utf-8");
             Marshal.FreeHGlobal(pSegBuffer);
-            string[] pair = SegStr.Split('\n');
-            string[,] table = new string[pair.Length, 3];
-            for (int i = 0; i < pair.Length; i++)
+
+            SegStr = SegStr.Trim(Program.WhiteSpaceChars);
+            string[,] table;
+            if (SegStr == string.Empty)
             {
-                string[] attrs = pair[i].Split('\t', ',');
-                table[i, 0] = attrs[0];
-                table[i, 1] = attrs[1];
-                table[i, 2] = attrs.Length >= 9 ? katakanaToHiragana(attrs[8]) : "";
+                table = new string[1, 3];
+                table[0, 0] = text;
+                table[0, 1] = table[0, 2] = "";
+            }
+            else
+            {
+                string[] Words = SegStr.Split('\n');
+                table = new string[Words.Length, 3];
+                for (int i = 0; i < Words.Length; i++)
+                {
+                    string[] WordAttrs = Words[i].Split('\t', ',');
+                    table[i, 0] = WordAttrs.Length >= 1 ? WordAttrs[0] : "";
+                    table[i, 1] = WordAttrs.Length >= 2 ? WordAttrs[1] : "";
+                    table[i, 2] = WordAttrs.Length >= 9 ? katakanaToHiragana(WordAttrs[8]) : "";
+                }
             }
             return table;
         }
@@ -59,7 +71,8 @@ namespace goVisualNovel
         [DllImport("MyMeCab.dll")]
         public static extern void MeCabSegment(
             [MarshalAs(UnmanagedType.LPWStr)] string text,
-            IntPtr res
+            IntPtr pSegBuffer,
+            int SegBufferSize
         );
     }
 }

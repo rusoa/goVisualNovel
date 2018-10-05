@@ -15,13 +15,11 @@ namespace goVisualNovel
         [DllImport("ExtText.dll")]
         public static extern void ExtText(
             [MarshalAs(UnmanagedType.LPWStr)] string ModuleName,
-            IntPtr HookAddr,
-            int HookEspBias,
-            bool HookValueAsAddr,
-            int HookValueAsAddrBias,
-            int BytesPerRead,
+            IntPtr Hookers,
+            int HookersNum,
             int MainThreadId,
             IntPtr ExtBuffer,
+            int ExtBufferSize,
             IntPtr StopExtText
         );
         [DllImport("kernel32.dll")]
@@ -46,13 +44,13 @@ namespace goVisualNovel
             (char)0x00, (char)0x01, (char)0x02, (char)0x03, (char)0x04, (char)0x05, (char)0x06, (char)0x07, (char)0x08, (char)0x09, (char)0x0a,
             (char)0x0b, (char)0x0c, (char)0x0d, (char)0x0e, (char)0x0f, (char)0x10, (char)0x11, (char)0x12, (char)0x13, (char)0x14, (char)0x15,
             (char)0x16, (char)0x17, (char)0x18, (char)0x19, (char)0x20, (char)0x1a, (char)0x1b, (char)0x1c, (char)0x1d, (char)0x1e, (char)0x1f,
-            (char)0x7f, (char)0x85, (char)0x27, (char)0x22, (char)0x5C, (char)0x00, (char)0x07, (char)0x08, (char)0x0C, (char)0x0A, (char)0x0D,
-            (char)0x09, (char)0x0B, (char)0x2028, (char)0x2029
+            (char)0x22, (char)0x27, (char)0x5C, (char)0x7f, (char)0x85, (char)0x2028, (char)0x2029
         };
         #endregion
 
         #region private var
         private static Thread ExtTextThread;
+        private volatile static IntPtr pHookers;
         private volatile static IntPtr pExtBuffer;
         private volatile static IntPtr pStopExtText;
         private static VisualNovel vn;
@@ -71,29 +69,33 @@ namespace goVisualNovel
         }
 
         #region Ext Text and Translation
-        public static void StartExtText(string VNName, string Language, string SpecialCode, int BytesPerRead, string ProcEncoding, string WordsFilter)
+        public static void StartExtText(string VNName, string Language, string HCode, int BytesPerRead, string ProcEncoding, string WordsFilter)
         {
             if (form1 != null && !form1.IsDisposed) form1.Close();
             StopExtText();
+            
+            vn = new VisualNovel(VNName);
+            vn.Language = Language;
+            vn.ProcEncoding = ProcEncoding;
+            vn.SetAttrsFromHCode(HCode);
+            vn.SetWordsFilterFromStr(WordsFilter);
 
-            SpecialDecoder sc = new SpecialDecoder(SpecialCode);
-            vn = new VisualNovel(VNName, Language, ProcEncoding, WordsFilter);
-
+            pHookers = Marshal.AllocHGlobal(Marshal.SizeOf(vn.Hookers[0]) * vn.Hookers.Length);
+            for(int i = 0; i < vn.Hookers.Length; i++)
+                Marshal.StructureToPtr(vn.Hookers[i], pHookers + Marshal.SizeOf(vn.Hookers[0]) * i, false);
             int Mtid = GetCurrentThreadId();
             pExtBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(byte)) * EXT_BYTES_MAX_SIZE);
             pStopExtText = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(bool)));
-
             Marshal.WriteByte(pStopExtText, 0);
+
             ExtTextThread = new Thread(() =>
                 ExtText(
-                    sc.ModuleName,
-                    sc.HookAddr,
-                    sc.HookEspBias,
-                    sc.HookValueAsAddr,
-                    sc.HookValueAsAddrBias,
-                    BytesPerRead,
+                    vn.ModuleName,
+                    pHookers,
+                    vn.Hookers.Length,
                     Mtid,
                     pExtBuffer,
+                    EXT_BYTES_MAX_SIZE,
                     pStopExtText
                 ));
             ExtTextThread.IsBackground = true;
@@ -109,6 +111,7 @@ namespace goVisualNovel
             Marshal.WriteByte(pStopExtText, 1);
             while (ExtTextThread.IsAlive && cd-- > 0) Thread.Sleep(1);
             if (cd <= 0) ExtTextThread.Abort();
+            Marshal.FreeHGlobal(pHookers);
             Marshal.FreeHGlobal(pExtBuffer);
             Marshal.FreeHGlobal(pStopExtText);
         }
@@ -116,8 +119,8 @@ namespace goVisualNovel
         public static void onExtText()
         {
             string OriginText = MyConverter.pBufferToString(pExtBuffer, EXT_BYTES_MAX_SIZE, vn.ProcEncoding);
-            if(vn.WordsFilter != null)
-                foreach(string w in vn.WordsFilter.Split(',')) OriginText = OriginText.Replace(w, "");
+            OriginText = OriginText.Trim(WhiteSpaceChars);
+            foreach (string w in vn.WordsFilter) OriginText = OriginText.Replace(w, "");
             TextTable = WordProcess.Process(OriginText, vn.Language);
             form1.RefreshText();
             List<Task<string>> TranslateTasks = GenerateTranslateTasks(OriginText);
