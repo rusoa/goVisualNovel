@@ -30,60 +30,59 @@
         {
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WelcomeForm));
-            this.Accept = new System.Windows.Forms.Button();
-            this.Cancel = new System.Windows.Forms.Button();
+            this.Select_Btn = new System.Windows.Forms.Button();
+            this.Exit_Btn = new System.Windows.Forms.Button();
             this.New = new System.Windows.Forms.Button();
             this.Delete = new System.Windows.Forms.Button();
             this.VNTable = new System.Windows.Forms.DataGridView();
-            this.VNName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.SpecialCode = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.WordsFilter = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Up = new System.Windows.Forms.Button();
             this.Down = new System.Windows.Forms.Button();
-            this.Setting = new System.Windows.Forms.Button();
+            this.Setting_Btn = new System.Windows.Forms.Button();
+            this.VNName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.VNSettings = new System.Windows.Forms.DataGridViewImageColumn();
             ((System.ComponentModel.ISupportInitialize)(this.VNTable)).BeginInit();
             this.SuspendLayout();
             // 
-            // Accept
+            // Select_Btn
             // 
-            this.Accept.Enabled = false;
-            this.Accept.Location = new System.Drawing.Point(617, 376);
-            this.Accept.Name = "Accept";
-            this.Accept.Size = new System.Drawing.Size(75, 23);
-            this.Accept.TabIndex = 0;
-            this.Accept.Text = "选择";
-            this.Accept.UseVisualStyleBackColor = true;
-            this.Accept.Click += new System.EventHandler(this.Accept_Click);
+            this.Select_Btn.Enabled = false;
+            this.Select_Btn.Location = new System.Drawing.Point(266, 376);
+            this.Select_Btn.Name = "Select_Btn";
+            this.Select_Btn.Size = new System.Drawing.Size(75, 23);
+            this.Select_Btn.TabIndex = 0;
+            this.Select_Btn.Text = "选择";
+            this.Select_Btn.UseVisualStyleBackColor = true;
+            this.Select_Btn.Click += new System.EventHandler(this.Select_Click);
             // 
-            // Cancel
+            // Exit_Btn
             // 
-            this.Cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.Cancel.Location = new System.Drawing.Point(698, 376);
-            this.Cancel.Name = "Cancel";
-            this.Cancel.Size = new System.Drawing.Size(75, 23);
-            this.Cancel.TabIndex = 1;
-            this.Cancel.Text = "退出";
-            this.Cancel.UseVisualStyleBackColor = true;
-            this.Cancel.Click += new System.EventHandler(this.Cancel_Click);
+            this.Exit_Btn.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.Exit_Btn.Location = new System.Drawing.Point(347, 376);
+            this.Exit_Btn.Name = "Exit_Btn";
+            this.Exit_Btn.Size = new System.Drawing.Size(75, 23);
+            this.Exit_Btn.TabIndex = 1;
+            this.Exit_Btn.Text = "退出";
+            this.Exit_Btn.UseVisualStyleBackColor = true;
+            this.Exit_Btn.Click += new System.EventHandler(this.Exit_Click);
             // 
             // New
             // 
             this.New.Location = new System.Drawing.Point(12, 12);
             this.New.Name = "New";
-            this.New.Size = new System.Drawing.Size(75, 23);
+            this.New.Size = new System.Drawing.Size(23, 23);
             this.New.TabIndex = 4;
-            this.New.Text = "新建";
+            this.New.Text = "+";
             this.New.UseVisualStyleBackColor = true;
             this.New.Click += new System.EventHandler(this.New_Click);
             // 
             // Delete
             // 
             this.Delete.Enabled = false;
-            this.Delete.Location = new System.Drawing.Point(93, 12);
+            this.Delete.Location = new System.Drawing.Point(41, 12);
             this.Delete.Name = "Delete";
-            this.Delete.Size = new System.Drawing.Size(75, 23);
+            this.Delete.Size = new System.Drawing.Size(23, 23);
             this.Delete.TabIndex = 5;
-            this.Delete.Text = "删除";
+            this.Delete.Text = "-";
             this.Delete.UseVisualStyleBackColor = true;
             this.Delete.Click += new System.EventHandler(this.Delete_Click);
             // 
@@ -94,6 +93,8 @@
             this.VNTable.AllowUserToResizeColumns = false;
             this.VNTable.AllowUserToResizeRows = false;
             this.VNTable.BackgroundColor = System.Drawing.Color.White;
+            this.VNTable.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.VNTable.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
             this.VNTable.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
             dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
@@ -105,96 +106,95 @@
             this.VNTable.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.VNTable.ColumnHeadersHeight = 40;
             this.VNTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            this.VNTable.ColumnHeadersVisible = false;
             this.VNTable.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.VNName,
-            this.SpecialCode,
-            this.WordsFilter});
+            this.VNSettings});
             this.VNTable.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.VNTable.GridColor = System.Drawing.Color.Gainsboro;
             this.VNTable.Location = new System.Drawing.Point(13, 42);
             this.VNTable.MultiSelect = false;
             this.VNTable.Name = "VNTable";
             this.VNTable.RowHeadersVisible = false;
-            this.VNTable.RowTemplate.Height = 30;
-            this.VNTable.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.VNTable.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            this.VNTable.RowTemplate.Height = 36;
             this.VNTable.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.VNTable.Size = new System.Drawing.Size(759, 328);
+            this.VNTable.Size = new System.Drawing.Size(409, 328);
             this.VNTable.TabIndex = 8;
             this.VNTable.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.VNTable_CellBeginEdit);
+            this.VNTable.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.VNTable_CellContentClick);
             this.VNTable.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.VNTable_CellDoubleClick);
             this.VNTable.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.VNTable_CellEndEdit);
             this.VNTable.SelectionChanged += new System.EventHandler(this.VNTable_SelectionChanged);
             this.VNTable.Click += new System.EventHandler(this.VNTable_Click);
             this.VNTable.Paint += new System.Windows.Forms.PaintEventHandler(this.VNTable_Paint);
             // 
-            // VNName
-            // 
-            this.VNName.HeaderText = "名称";
-            this.VNName.Name = "VNName";
-            this.VNName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.VNName.Width = 232;
-            // 
-            // SpecialCode
-            // 
-            this.SpecialCode.HeaderText = "特殊码";
-            this.SpecialCode.Name = "SpecialCode";
-            this.SpecialCode.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.SpecialCode.Width = 292;
-            // 
-            // WordsFilter
-            // 
-            this.WordsFilter.HeaderText = "词语过滤器(英文逗号分隔)";
-            this.WordsFilter.Name = "WordsFilter";
-            this.WordsFilter.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.WordsFilter.Width = 232;
-            // 
             // Up
             // 
             this.Up.Enabled = false;
-            this.Up.Location = new System.Drawing.Point(174, 12);
+            this.Up.Location = new System.Drawing.Point(70, 12);
             this.Up.Name = "Up";
-            this.Up.Size = new System.Drawing.Size(75, 23);
+            this.Up.Size = new System.Drawing.Size(23, 23);
             this.Up.TabIndex = 9;
-            this.Up.Text = "上移";
+            this.Up.Text = "↑";
             this.Up.UseVisualStyleBackColor = true;
             this.Up.Click += new System.EventHandler(this.Up_Click);
             // 
             // Down
             // 
             this.Down.Enabled = false;
-            this.Down.Location = new System.Drawing.Point(255, 12);
+            this.Down.Location = new System.Drawing.Point(99, 12);
             this.Down.Name = "Down";
-            this.Down.Size = new System.Drawing.Size(75, 23);
+            this.Down.Size = new System.Drawing.Size(23, 23);
             this.Down.TabIndex = 10;
-            this.Down.Text = "下移";
+            this.Down.Text = "↓";
             this.Down.UseVisualStyleBackColor = true;
             this.Down.Click += new System.EventHandler(this.Down_Click);
             // 
-            // Setting
+            // Setting_Btn
             // 
-            this.Setting.Location = new System.Drawing.Point(697, 12);
-            this.Setting.Name = "Setting";
-            this.Setting.Size = new System.Drawing.Size(75, 23);
-            this.Setting.TabIndex = 11;
-            this.Setting.Text = "设置";
-            this.Setting.UseVisualStyleBackColor = true;
-            this.Setting.Click += new System.EventHandler(this.Setting_Click);
+            this.Setting_Btn.Location = new System.Drawing.Point(347, 13);
+            this.Setting_Btn.Name = "Setting_Btn";
+            this.Setting_Btn.Size = new System.Drawing.Size(75, 23);
+            this.Setting_Btn.TabIndex = 11;
+            this.Setting_Btn.Text = "主设置";
+            this.Setting_Btn.UseVisualStyleBackColor = true;
+            this.Setting_Btn.Click += new System.EventHandler(this.Setting_Click);
+            // 
+            // VNName
+            // 
+            this.VNName.DataPropertyName = "VNName";
+            this.VNName.HeaderText = "名称";
+            this.VNName.Name = "VNName";
+            this.VNName.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.VNName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.VNName.Width = 370;
+            // 
+            // VNSettings
+            // 
+            this.VNSettings.HeaderText = "配置";
+            this.VNSettings.Image = ((System.Drawing.Image)(resources.GetObject("VNSettings.Image")));
+            this.VNSettings.ImageLayout = System.Windows.Forms.DataGridViewImageCellLayout.Zoom;
+            this.VNSettings.Name = "VNSettings";
+            this.VNSettings.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.VNSettings.Width = 36;
             // 
             // WelcomeForm
             // 
-            this.AcceptButton = this.Accept;
+            this.AcceptButton = this.Select_Btn;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.Cancel;
-            this.ClientSize = new System.Drawing.Size(784, 411);
-            this.Controls.Add(this.Setting);
+            this.CancelButton = this.Exit_Btn;
+            this.ClientSize = new System.Drawing.Size(434, 411);
+            this.Controls.Add(this.Setting_Btn);
             this.Controls.Add(this.Down);
             this.Controls.Add(this.Up);
             this.Controls.Add(this.VNTable);
             this.Controls.Add(this.Delete);
             this.Controls.Add(this.New);
-            this.Controls.Add(this.Cancel);
-            this.Controls.Add(this.Accept);
+            this.Controls.Add(this.Exit_Btn);
+            this.Controls.Add(this.Select_Btn);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "WelcomeForm";
@@ -208,16 +208,15 @@
 
         #endregion
 
-        private System.Windows.Forms.Button Accept;
-        private System.Windows.Forms.Button Cancel;
+        private System.Windows.Forms.Button Select_Btn;
+        private System.Windows.Forms.Button Exit_Btn;
         private System.Windows.Forms.Button New;
         private System.Windows.Forms.Button Delete;
         private System.Windows.Forms.DataGridView VNTable;
         private System.Windows.Forms.Button Up;
         private System.Windows.Forms.Button Down;
-        private System.Windows.Forms.Button Setting;
+        private System.Windows.Forms.Button Setting_Btn;
         private System.Windows.Forms.DataGridViewTextBoxColumn VNName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn SpecialCode;
-        private System.Windows.Forms.DataGridViewTextBoxColumn WordsFilter;
+        private System.Windows.Forms.DataGridViewImageColumn VNSettings;
     }
 }

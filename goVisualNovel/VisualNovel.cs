@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace goVisualNovel
 {
-    class VisualNovel
+    public class VisualNovel
     {
         [StructLayout(LayoutKind.Sequential)]
         public struct Hooker
@@ -20,16 +20,38 @@ namespace goVisualNovel
             public int BytesPerRead;
         };
 
-        public string VNName;
-        public string ModuleName;
-        public string Language;
-        public string ProcEncoding;
-        public Hooker[] Hookers;
-        public string[] WordsFilter;
+        public string VNName { get; set; }
+        public string Language { get; set; }
+        public string ProcEncoding { get; set; }
+        public string ModuleName { get; set; }
+        public List<Hooker> Hookers { get; set; }
+        public string[] WordsFilter { get; set; }
 
-        public VisualNovel(string VNName)
+        public VisualNovel(bool CreateNewHook = false)
         {
-            this.VNName = VNName;
+            ModuleName = VNName = "";
+            Language = "ja";
+            ProcEncoding = "shift-jis";
+            Hookers = new List<Hooker>();
+            if(CreateNewHook)
+            {
+                Hooker h = new Hooker() { Addr = (IntPtr)0, EspBias = -0x14, ValueAsAddr = false, ValueAsAddrBias = 0, BytesPerRead = 2 };
+                Hookers.Add(h);
+            }
+            WordsFilter = new string[0];
+        }
+
+        /**
+         * deep copy for the normal copy constructor can't co-work with json serialization
+         */
+        public void CopyTo(ref VisualNovel vn)
+        {
+            vn.VNName = VNName;
+            vn.Language = Language;
+            vn.ProcEncoding = ProcEncoding;
+            vn.ModuleName = ModuleName;
+            vn.Hookers = new List<Hooker>(Hookers.ToArray());
+            WordsFilter.CopyTo(vn.WordsFilter, 0);
         }
 
         public void SetAttrsFromHCode(string HCode)
@@ -41,26 +63,30 @@ namespace goVisualNovel
             HCode = Regex.Replace(HCode, "#.*?(?=@)", ""); //skip "level"
 
             //skip "name or ordinal"
-            ModuleName = Regex.Match(HCode, "(?<=@.*?:).*$").Value;
-            if (ModuleName == string.Empty) throw new ArgumentException();
+            string ModuleName_tmp = Regex.Match(HCode, "(?<=@.*?:).*$").Value;
+            if (ModuleName_tmp == string.Empty) throw new ArgumentException();
 
-            int Addr = Convert.ToInt32(Regex.Match(HCode, "(?<=@).*?(?=:)").Value, 16);
+            //hook addr
+            IntPtr Addr_tmp = (IntPtr)Convert.ToUInt32(Regex.Match(HCode, "(?<=@).*?(?=:)").Value, 16);
 
-            //get hookers
+            //get hookers, HookerStrs[i] is like this: EspBias[*ValueAsAddrBias]
             string[] HookerStrs = Regex.Match(HCode, "^.*?(?=@)").Value.Split(':');
             if (HookerStrs.Length < 1 || HookerStrs.Length > 2) throw new ArgumentException();
-
-            Hookers = new Hooker[HookerStrs.Length];
-            for (int i = 0; i < Hookers.Length; i++)
+            List<Hooker> Hookers_tmp = new List<Hooker>();
+            for (int i = 0; i < HookerStrs.Length; i++)
             {
-                //HookerStrs[i] is like this: EspBias[*ValueAsAddrBias]
-                Hookers[i].EspBias = Cvt2EspBias(Regex.Match(HookerStrs[i], "^.*?(?=(\\*|$))").Value);
-                Hookers[i].ValueAsAddr = HookerStrs[i].IndexOf('*') != -1;
-                if (Hookers[i].ValueAsAddr)
-                    Hookers[i].ValueAsAddrBias = Cvt2ValueAsAddrBias(Regex.Match(HookerStrs[i], "(?<=\\*).*$").Value);
-                Hookers[i].Addr = (IntPtr)Addr;
-                Hookers[i].BytesPerRead = Hookers.Length == 1 ? 2 : 1;
+                Hooker h = new Hooker();
+                h.EspBias = Cvt2EspBias(Regex.Match(HookerStrs[i], "^.*?(?=(\\*|$))").Value);
+                h.ValueAsAddr = HookerStrs[i].IndexOf('*') != -1;
+                if (h.ValueAsAddr)
+                    h.ValueAsAddrBias = Cvt2ValueAsAddrBias(Regex.Match(HookerStrs[i], "(?<=\\*).*$").Value);
+                h.Addr = Addr_tmp;
+                h.BytesPerRead = HookerStrs.Length == 1 ? 2 : 1;
+                Hookers_tmp.Add(h);
             }
+
+            ModuleName = ModuleName_tmp;
+            Hookers = Hookers_tmp;
         }
 
         public void SetWordsFilterFromStr(string str)
@@ -70,12 +96,14 @@ namespace goVisualNovel
             else WordsFilter = str.Split(',');
         }
 
-        //HookEspBias, the value addr bias to &ctx.Esp
-        //when the value is positive, the result addr = ctx.Esp + value
-        //when the value is zero, then hook the return addr
-        //when the value is nagative, the result addr = (char *)&ctx.Ebp + value
-        //but to esp, ebp, esi and edi we may do little more convert
-        //actually it imitate the stack frame when execute PUSHAD, but we can also use it to calculate addr
+        /**
+         * HookEspBias, the value addr bias to &ctx.Esp
+         * when the value is positive, the result addr = ctx.Esp + value
+         * when the value is zero, then hook the return addr
+         * when the value is nagative, the result addr = (char *)&ctx.Ebp + value
+         * but to esp, ebp, esi and edi we may do little more convert
+         * actually it imitate the stack frame when execute PUSHAD, but we can also use it to calculate addr
+         */
         private static int Cvt2EspBias(string str)
         {
             if (str == string.Empty) throw new ArgumentException();
@@ -84,8 +112,8 @@ namespace goVisualNovel
             if (str.StartsWith("-"))
             {
                 a = -0x10 - Convert.ToInt32(str.Substring(1), 16);
-                if (a == -0x24) a = 0;
-                else if (a == -0x28) a = -0x4;
+                if (a == -0x24) a = 0x00;
+                else if (a == -0x28) a = -0x04;
                 else if (a == -0x2c) a = -0x24;
                 else if (a == -0x30) a = -0x28;
             }

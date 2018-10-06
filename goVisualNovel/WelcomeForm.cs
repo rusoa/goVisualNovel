@@ -9,18 +9,26 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
+using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace goVisualNovel
 {
     public partial class WelcomeForm : Form
     {
-        private string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\goVisualNovel";
+        #region vars
+        private string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\goVisualNovel\\VNSettings.json";
+        private List<VisualNovel> VNList = null;
+        private BindingList<VisualNovel> bVNList;
+
         private Color OddBackColor = Color.White;
         private Color EvenBackColor = Color.LavenderBlush;
         private Color RawForeColor = Color.Black;
         private Color SelectBackColor = Color.PaleVioletRed;
         private Color SelectForeColor = Color.White;
+        #endregion
 
+        #region form
         public WelcomeForm()
         {
             InitializeComponent();
@@ -31,39 +39,49 @@ namespace goVisualNovel
             VNTable.DefaultCellStyle.SelectionBackColor = SelectBackColor;
             VNTable.DefaultCellStyle.SelectionForeColor = SelectForeColor;
 
-            XmlDocument doc = new XmlDocument();
-            try { doc.Load(path + "\\VNSettings.xml"); }
+            FileStream fs = null;
+            StreamReader sr = null;
+            try
+            {
+                fs = new FileStream(path, FileMode.Open);
+                sr = new StreamReader(fs, Encoding.GetEncoding("utf-8"));
+                VNList = JsonConvert.DeserializeObject<List<VisualNovel>>(sr.ReadToEnd());
+            }
             catch(DirectoryNotFoundException)
             {
                 Directory.CreateDirectory(path);
-                doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", null));
-                doc.AppendChild(doc.CreateElement("vns"));
+                VNList = new List<VisualNovel>();
             }
             catch(FileNotFoundException)
             {
-                doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", null));
-                doc.AppendChild(doc.CreateElement("vns"));
+                VNList = new List<VisualNovel>();
             }
-            foreach(XmlNode node in doc.DocumentElement.GetElementsByTagName("vn"))
+            catch(Exception)
             {
-                VNTable.Rows.Add(1);
-                VNTable[0, VNTable.Rows.Count - 1].Value = ((XmlElement)node).GetElementsByTagName("VNName")[0].InnerText;
-                VNTable[1, VNTable.Rows.Count - 1].Value = ((XmlElement)node).GetElementsByTagName("SpecialCode")[0].InnerText;
-                VNTable[2, VNTable.Rows.Count - 1].Value = ((XmlElement)node).GetElementsByTagName("WordsFilter")[0].InnerText;
+                MessageBox.Show("读取配置信息错误！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                VNList = new List<VisualNovel>();
             }
-        }
+            if (sr != null) sr.Close();
+            if (fs != null) fs.Close();
 
-        #region operator buttons
+            bVNList = new BindingList<VisualNovel>(VNList);
+            VNTable.AutoGenerateColumns = false;
+            VNTable.DataSource = bVNList;
+        }
+        #endregion
+
+        #region items edit buttons
         private void New_Click(object sender, EventArgs e)
         {
+            VisualNovel vn = new VisualNovel(true);
             if (VNTable.SelectedRows.Count == 0)
             {
-                VNTable.Rows.Add(1);
+                bVNList.Add(vn);
                 VNTable.Rows[VNTable.Rows.Count - 1].Selected = true;
             }
             else
             {
-                VNTable.Rows.Insert(VNTable.SelectedRows[0].Index + 1);
+                bVNList.Insert(VNTable.SelectedRows[0].Index + 1, vn);
                 VNTable.Rows[VNTable.SelectedRows[0].Index + 1].Selected = true;
             }
         }
@@ -71,25 +89,25 @@ namespace goVisualNovel
         private void Delete_Click(object sender, EventArgs e)
         {
             int i = VNTable.SelectedRows[0].Index;
-            VNTable.Rows.Remove(VNTable.SelectedRows[0]);
+            bVNList.RemoveAt(i);
             if (i > 0) VNTable.Rows[i - 1].Selected = true;
         }
 
         private void Up_Click(object sender, EventArgs e)
         {
-            DataGridViewRow temp = VNTable.SelectedRows[0];
-            int i = temp.Index;
-            VNTable.Rows.Remove(temp);
-            VNTable.Rows.Insert(i - 1, temp);
+            int i = VNTable.SelectedRows[0].Index;
+            VisualNovel temp = bVNList[i];
+            bVNList.Remove(temp);
+            bVNList.Insert(i - 1, temp);
             VNTable.Rows[i - 1].Selected = true;
         }
 
         private void Down_Click(object sender, EventArgs e)
         {
-            DataGridViewRow temp = VNTable.SelectedRows[0];
-            int i = temp.Index;
-            VNTable.Rows.Remove(temp);
-            VNTable.Rows.Insert(i + 1, temp);
+            int i = VNTable.SelectedRows[0].Index;
+            VisualNovel temp = bVNList[i];
+            bVNList.Remove(temp);
+            bVNList.Insert(i + 1, temp);
             VNTable.Rows[i + 1].Selected = true;
         }
         #endregion
@@ -119,14 +137,30 @@ namespace goVisualNovel
             VNTable.ClearSelection();
         }
 
+        private void VNTable_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex == 1)
+            {
+                VisualNovel vn = new VisualNovel();
+                VNList[e.RowIndex].CopyTo(ref vn);
+                VNSettingsForm VNSet = new VNSettingsForm(vn);
+                DialogResult res = VNSet.ShowDialog();
+                if(res == DialogResult.OK)
+                {
+                    VNList[e.RowIndex] = vn;
+                    VNTable.Refresh();
+                }
+            }
+        }
+
         private void VNTable_SelectionChanged(object sender, EventArgs e)
         {
             if(VNTable.IsCurrentCellInEditMode) VNTable.EndEdit();
             if (VNTable.SelectedRows.Count == 0)
-                Up.Enabled = Down.Enabled = Accept.Enabled = Delete.Enabled = false;
+                Up.Enabled = Down.Enabled = Select_Btn.Enabled = Delete.Enabled = false;
             else
             {
-                Accept.Enabled = Delete.Enabled = true;
+                Select_Btn.Enabled = Delete.Enabled = true;
                 if (VNTable.SelectedRows[0].Index > 0) Up.Enabled = true;
                 else Up.Enabled = false;
                 if (VNTable.SelectedRows[0].Index < VNTable.Rows.Count - 1) Down.Enabled = true;
@@ -145,29 +179,25 @@ namespace goVisualNovel
         }
         #endregion
 
-        private void Accept_Click(object sender, EventArgs e)
+        #region form buttons
+        private void Select_Click(object sender, EventArgs e)
         {
-            SaveDoc();
-            int rowi = VNTable.SelectedRows[0].Index;
-            string VNName = VNTable[0, rowi].Value != null ? VNTable[0, rowi].Value.ToString() : "";
-            string SpecialCode = VNTable[1, rowi].Value != null ? VNTable[1, rowi].Value.ToString() : "";
-            string WordsFilter = VNTable[2, rowi].Value != null ? VNTable[2, rowi].Value.ToString() : "";
+            SaveVNList();
             try
             {
-                Program.StartExtText(VNName, "ja", SpecialCode, 2, "shift-jis", WordsFilter);
+                Program.StartExtText(VNList[VNTable.SelectedRows[0].Index]);
             }
-            catch (Exception)
+            catch(Exception)
             {
-                MessageBox.Show("解析错误！");
+                MessageBox.Show("启动失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             Close();
         }
 
-        private void Cancel_Click(object sender, EventArgs e)
+        private void Exit_Click(object sender, EventArgs e)
         {
-            SaveDoc();
-            Close();
+            SaveVNList();
             Program.myExit();
         }
 
@@ -176,28 +206,14 @@ namespace goVisualNovel
             Program.ShowSettingsForm();
         }
 
-        private void SaveDoc()
+        private void SaveVNList()
         {
-            XmlDocument doc = new XmlDocument();
-            doc.AppendChild(doc.CreateXmlDeclaration("1.0", "utf-8", null));
-            XmlElement root = doc.CreateElement("vns");
-            for (int i = 0; i < VNTable.Rows.Count; i++)
-            {
-                XmlElement vn = doc.CreateElement("vn");
-                //if the name is empty, then skip it
-                if (VNTable[0, i].Value == null || VNTable[0, i].Value.ToString().Trim() == string.Empty) continue;
-                //loop to store all the cell values in this row
-                for (int j = 0; j < VNTable.Columns.Count; j++)
-                {
-                    XmlElement element = doc.CreateElement(VNTable.Columns[j].Name);
-                    XmlNode node = doc.CreateTextNode(VNTable[j, i].Value != null ? VNTable[j, i].Value.ToString() : "");
-                    element.AppendChild(node);
-                    vn.AppendChild(element);
-                }
-                root.AppendChild(vn);
-            }
-            doc.AppendChild(root);
-            doc.Save(path + "\\VNSettings.xml");
+            FileStream fs = new FileStream(path, FileMode.Create);
+            StreamWriter sw = new StreamWriter(fs, Encoding.GetEncoding("utf-8"));
+            sw.Write(JsonConvert.SerializeObject(VNList));
+            sw.Close();
+            fs.Close();
         }
+        #endregion
     }
 }

@@ -69,19 +69,14 @@ namespace goVisualNovel
         }
 
         #region Ext Text and Translation
-        public static void StartExtText(string VNName, string Language, string HCode, int BytesPerRead, string ProcEncoding, string WordsFilter)
+        public static void StartExtText(VisualNovel vn)
         {
             if (form1 != null && !form1.IsDisposed) form1.Close();
             StopExtText();
-            
-            vn = new VisualNovel(VNName);
-            vn.Language = Language;
-            vn.ProcEncoding = ProcEncoding;
-            vn.SetAttrsFromHCode(HCode);
-            vn.SetWordsFilterFromStr(WordsFilter);
 
-            pHookers = Marshal.AllocHGlobal(Marshal.SizeOf(vn.Hookers[0]) * vn.Hookers.Length);
-            for(int i = 0; i < vn.Hookers.Length; i++)
+            Program.vn = vn;
+            pHookers = Marshal.AllocHGlobal(Marshal.SizeOf(vn.Hookers[0]) * vn.Hookers.Count);
+            for(int i = 0; i < vn.Hookers.Count; i++)
                 Marshal.StructureToPtr(vn.Hookers[i], pHookers + Marshal.SizeOf(vn.Hookers[0]) * i, false);
             int Mtid = GetCurrentThreadId();
             pExtBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(byte)) * EXT_BYTES_MAX_SIZE);
@@ -92,7 +87,7 @@ namespace goVisualNovel
                 ExtText(
                     vn.ModuleName,
                     pHookers,
-                    vn.Hookers.Length,
+                    vn.Hookers.Count,
                     Mtid,
                     pExtBuffer,
                     EXT_BYTES_MAX_SIZE,

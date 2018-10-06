@@ -158,6 +158,7 @@
             this.Controls.Add(this.Accept);
             this.Controls.Add(this.SettingsPanel);
             this.Controls.Add(this.SettingsTree);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "SettingsForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
