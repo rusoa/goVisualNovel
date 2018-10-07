@@ -73,7 +73,7 @@ namespace goVisualNovel
         #region items edit buttons
         private void New_Click(object sender, EventArgs e)
         {
-            VisualNovel vn = new VisualNovel(true);
+            VisualNovel vn = new VisualNovel();
             if (VNTable.SelectedRows.Count == 0)
             {
                 bVNList.Add(vn);
@@ -143,7 +143,9 @@ namespace goVisualNovel
             {
                 VisualNovel vn = new VisualNovel();
                 VNList[e.RowIndex].CopyTo(ref vn);
+
                 VNSettingsForm VNSet = new VNSettingsForm(vn);
+
                 DialogResult res = VNSet.ShowDialog();
                 if(res == DialogResult.OK)
                 {

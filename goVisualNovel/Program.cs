@@ -152,7 +152,7 @@ namespace goVisualNovel
 
         public static void onExtTextExitError()
         {
-            MessageBox.Show("提取文字失败！");
+            MessageBox.Show("提取文字失败，请重试！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             onExtTextExitPassive();
         }
         #endregion

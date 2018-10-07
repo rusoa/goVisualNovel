@@ -15,7 +15,6 @@ bool EnableDebugPriv()
         return false;
     }
 
-
     tkp.PrivilegeCount = 1;
     tkp.Privileges[0].Luid = sedebugnameValue;
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;

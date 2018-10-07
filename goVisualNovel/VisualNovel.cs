@@ -10,6 +10,7 @@ namespace goVisualNovel
 {
     public class VisualNovel
     {
+        //the array of this struct will be send to text extractor, so keep as simiple as possible
         [StructLayout(LayoutKind.Sequential)]
         public struct Hooker
         {
@@ -33,16 +34,11 @@ namespace goVisualNovel
             Language = "ja";
             ProcEncoding = "shift-jis";
             Hookers = new List<Hooker>();
-            if(CreateNewHook)
-            {
-                Hooker h = new Hooker() { Addr = (IntPtr)0, EspBias = -0x14, ValueAsAddr = false, ValueAsAddrBias = 0, BytesPerRead = 2 };
-                Hookers.Add(h);
-            }
             WordsFilter = new string[0];
         }
 
         /**
-         * deep copy for the normal copy constructor can't co-work with json serialization
+         * deep copy for the normal copy constructor doesn't co-work with json serializer
          */
         public void CopyTo(ref VisualNovel vn)
         {
@@ -87,13 +83,6 @@ namespace goVisualNovel
 
             ModuleName = ModuleName_tmp;
             Hookers = Hookers_tmp;
-        }
-
-        public void SetWordsFilterFromStr(string str)
-        {
-            str = str.Trim(Program.WhiteSpaceChars);
-            if(str == null || str == string.Empty) WordsFilter = new string[0];
-            else WordsFilter = str.Split(',');
         }
 
         /**

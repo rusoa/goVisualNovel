@@ -186,7 +186,7 @@ void __stdcall ExtText(
             }
         }
     }
-    catch(runtime_error e)
+    catch(...)
     {
         DebugActiveProcessStop(pid);
         delete OriginalCodes;

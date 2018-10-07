@@ -57,6 +57,7 @@ namespace goVisualNovel
         private void VNSettingsForm_Load(object sender, EventArgs e)
         {
             #region controls logic and data sources
+
             BindingSource bLanguage = new BindingSource();
             bLanguage.DataSource = LanguageDic;
             Language_ComboBox.DataSource = bLanguage;
@@ -80,18 +81,20 @@ namespace goVisualNovel
                 BindingSource bHookers = new BindingSource();
                 bHookers.DataSource = HookerDic;
                 ComboBox HookiEspBias_ComboBox = (ComboBox)GetControlByName(string.Format("Hook{0}EspBias_ComboBox", i));
-                Hook0EspBias_ComboBox.DataSource = bHookers;
-                Hook0EspBias_ComboBox.DisplayMember = "Key";
-                Hook0EspBias_ComboBox.ValueMember = "Value";
+                HookiEspBias_ComboBox.DataSource = bHookers;
+                HookiEspBias_ComboBox.DisplayMember = "Key";
+                HookiEspBias_ComboBox.ValueMember = "Value";
 
                 CheckBox HookiValueAsAddr_CheckBox = (CheckBox)GetControlByName(string.Format("Hook{0}ValueAsAddr_CheckBox", i));
                 TextBox HookiValueAsAddrBias_TextBox = (TextBox)GetControlByName(string.Format("Hook{0}ValueAsAddrBias_TextBox", i));
                 HookiValueAsAddr_CheckBox.Paint += (object o, PaintEventArgs ea) =>
                     { HookiValueAsAddrBias_TextBox.Enabled = HookiValueAsAddr_CheckBox.CheckState == CheckState.Checked; };
             }
+
             #endregion
 
             #region set attrs from object
+
             VNName_TextBox.Text = vn.VNName;
             foreach (KeyValuePair<string, string> pair in LanguageDic)
             {
@@ -101,43 +104,19 @@ namespace goVisualNovel
             }
             ProcEncoding_ComboBox.SelectedItem = vn.ProcEncoding;
             ModuleName_TextBox.Text = vn.ModuleName;
+
             for (int i = 0; i < vn.Hookers.Count; i++)
-            {
-                foreach(Control c in Controls)
-                {
-                    if (c.Name == "Hook" + i + "Addr_TextBox")
-                    {
-                        ((TextBox)c).Text = "0x" + vn.Hookers[i].Addr.ToString("x");
-                    }  
-                    else if (c.Name == "Hook" + i + "EspBias_ComboBox")
-                    {
-                        foreach (KeyValuePair<string, int> pair in HookerDic)
-                        {
-                            if (pair.Value != vn.Hookers[i].EspBias) continue;
-                            ((ComboBox)c).SelectedItem = pair;
-                            break;
-                        }
-                    }
-                    else if (c.Name == "Hook" + i + "ValueAsAddr_CheckBox")
-                    {
-                        ((CheckBox)c).CheckState = vn.Hookers[i].ValueAsAddr ? CheckState.Checked : CheckState.Unchecked;
-                    }
-                    else if(c.Name == "Hook" + i + "ValueAsAddrBias_TextBox")
-                    {
-                        ((TextBox)c).Text = "0x" + vn.Hookers[i].ValueAsAddrBias.ToString("x");
-                    }
-                    else if(c.Name == "Hook" + i + "BytesPerRead_ComboBox")
-                    {
-                        ((ComboBox)c).SelectedItem = vn.Hookers[i].BytesPerRead.ToString();
-                    }
-                }
-            }
-            if (vn.Hookers.Count == 1)
+                ReadHooker(i);
+
+            if (vn.Hookers.Count < 2)
                 Hook1_CheckBox.CheckState = CheckState.Unchecked;
+
             WordsFilter_TextBox.Text = string.Join(",", vn.WordsFilter);
+
             #endregion
 
             #region controls value change bindings
+
             VNName_TextBox.TextChanged += (object o, EventArgs ea) =>
                 { vn.VNName = VNName_TextBox.Text; };
 
@@ -156,17 +135,17 @@ namespace goVisualNovel
                 {
                     ((TextBox)c).TextChanged += (object o, EventArgs ea) =>
                     {
-                        string text = ((TextBox)o).Text;
+                        TextBox tb = (TextBox)o;
 
-                        if (!Regex.IsMatch(text, "^0x[0-9a-eA-E]*$"))
+                        //hex number string start with 0x, no more than 7 digit. No 0x0a, but permit 0x0 and 0x
+                        if (!Regex.IsMatch(tb.Text, "^0x(0?$|[1-9a-fA-F][0-9a-fA-F]{0,6}$)"))
                         {
-                            AccessHooker(o, h => { ((TextBox)o).Text = "0x" + h.Addr.ToString("x"); return h; });
-                            ((TextBox)o).Select(text.Length, 0);
+                            AccessHooker(o, h => { tb.Text = "0x" + h.Addr.ToString("x"); return h; });
+                            tb.Select(tb.Text.Length, 0);
                             return;
                         }
 
-                        if (text == "0x") text = "0x0";
-                        AccessHooker(o, h => { h.Addr = (IntPtr)Convert.ToUInt32(text, 16); return h; }); //[...]溢出，考虑确认时一次性检验
+                        AccessHooker(o, h => { h.Addr = (IntPtr)(tb.Text == "0x" ? 0 : Convert.ToUInt32(tb.Text, 16)); return h; });
                     };
                 }
                 else if (Regex.IsMatch(c.Name, "Hook\\dEspBias_ComboBox"))
@@ -187,17 +166,16 @@ namespace goVisualNovel
                 {
                     ((TextBox)c).TextChanged += (object o, EventArgs ea) =>
                     {
-                        string text = ((TextBox)o).Text;
+                        TextBox tb = (TextBox)o;
 
-                        if (!Regex.IsMatch(text, "^0x[0-9a-eA-E]*$"))
+                        if (!Regex.IsMatch(tb.Text, "^0x(0?$|[1-9a-fA-F][0-9a-fA-F]{0,2}$)"))
                         {
-                            AccessHooker(o, h => { ((TextBox)o).Text = "0x" + h.ValueAsAddrBias.ToString("x"); return h; });
-                            ((TextBox)o).Select(text.Length, 0);
+                            AccessHooker(o, h => { tb.Text = "0x" + h.ValueAsAddrBias.ToString("x"); return h; });
+                            tb.Select(tb.Text.Length, 0);
                             return;
                         }
 
-                        if (text == "0x") text = "0x0";
-                        AccessHooker(o, h => { h.Addr = (IntPtr)Convert.ToUInt32(text, 16); return h; }); //[...]同上
+                        AccessHooker(o, h => { h.ValueAsAddrBias = tb.Text == "0x" ? 0 : Convert.ToInt16(tb.Text, 16); return h; });
                     };
                 }
                 else if (Regex.IsMatch(c.Name, "Hook\\dBytesPerRead_ComboBox"))
@@ -208,9 +186,31 @@ namespace goVisualNovel
                     };
                 }
             }
+
+            Hook1_CheckBox.CheckStateChanged += (object o, EventArgs ea) =>
+            {
+                if(Hook1_CheckBox.CheckState == CheckState.Checked)
+                {
+                    
+                    AddHooker();
+                }
+                else if(Hook1_CheckBox.CheckState == CheckState.Unchecked)
+                {
+                    vn.Hookers.RemoveAt(vn.Hookers.Count - 1);
+                }
+            };
+
+            WordsFilter_TextBox.TextChanged += (object o, EventArgs ea) =>
+            {
+                vn.WordsFilter = ((TextBox)o).Text.Split(',');
+            };
+
             #endregion
+
+            if (vn.Hookers.Count < 1) AddHooker();
         }
 
+        #region hooker operations
         /**
          * Hooker idx depends on the ((Control)o).Name "Hook[i]xxxx"
          */
@@ -220,14 +220,68 @@ namespace goVisualNovel
             vn.Hookers[i] = f(vn.Hookers[i]);
         }
 
+        /**
+         * Read Hooker and set controls value
+         */
+        private void ReadHooker(int i)
+        {
+            foreach (Control c in Controls)
+            {
+                if (c.Name == "Hook" + i + "Addr_TextBox")
+                {
+                    ((TextBox)c).Text = "0x" + vn.Hookers[i].Addr.ToString("x");
+                }
+                else if (c.Name == "Hook" + i + "EspBias_ComboBox")
+                {
+                    foreach (KeyValuePair<string, int> pair in HookerDic)
+                    {
+                        if (pair.Value != vn.Hookers[i].EspBias) continue;
+                        ((ComboBox)c).SelectedItem = pair;
+                        break;
+                    }
+                }
+                else if (c.Name == "Hook" + i + "ValueAsAddr_CheckBox")
+                {
+                    ((CheckBox)c).CheckState = vn.Hookers[i].ValueAsAddr ? CheckState.Checked : CheckState.Unchecked;
+                }
+                else if (c.Name == "Hook" + i + "ValueAsAddrBias_TextBox")
+                {
+                    ((TextBox)c).Text = "0x" + vn.Hookers[i].ValueAsAddrBias.ToString("x");
+                }
+                else if (c.Name == "Hook" + i + "BytesPerRead_ComboBox")
+                {
+                    ((ComboBox)c).SelectedItem = vn.Hookers[i].BytesPerRead.ToString();
+                }
+            }
+        }
+
+        /**
+         * Add and initialize hooker i through controls value binding
+         */
+        private void AddHooker()
+        {
+            vn.Hookers.Add(new VisualNovel.Hooker()
+            {
+                Addr = (IntPtr)0, EspBias = -0x14, ValueAsAddr = false, ValueAsAddrBias = 0, BytesPerRead = 2
+            });
+
+            ReadHooker(vn.Hookers.Count - 1);
+        }
+        #endregion
+
         private void ImportFromHCode_Click(object sender, EventArgs e)
         {
             string str = "";
         st: str = Interaction.InputBox("由于本程序对原提取器功能做了一些扩展，\n\n因此仅支持从特殊码中导入一部分设置。", "请输入特殊码", str);
             try
             {
-                if(!string.IsNullOrEmpty(str))
-                    vn.SetAttrsFromHCode(str);
+                if (string.IsNullOrEmpty(str)) return;
+
+                vn.SetAttrsFromHCode(str);
+
+                ModuleName_TextBox.Text = vn.ModuleName;
+                for (int i = 0; i < vn.Hookers.Count; i++)
+                    ReadHooker(i);
             }
             catch(Exception)
             {
