@@ -60,10 +60,10 @@ namespace goVisualNovel
 
             //skip "name or ordinal"
             string ModuleName_tmp = Regex.Match(HCode, "(?<=@.*?:).*$").Value;
-            if (ModuleName_tmp == string.Empty) throw new ArgumentException();
+            if (ModuleName_tmp == string.Empty) ModuleName_tmp = VNName + ".exe";
 
             //hook addr
-            IntPtr Addr_tmp = (IntPtr)Convert.ToUInt32(Regex.Match(HCode, "(?<=@).*?(?=:)").Value, 16);
+            IntPtr Addr_tmp = (IntPtr)Convert.ToUInt32(Regex.Match(HCode, "(?<=@).*?(?=(:|$))").Value, 16);
 
             //get hookers, HookerStrs[i] is like this: EspBias[*ValueAsAddrBias]
             string[] HookerStrs = Regex.Match(HCode, "^.*?(?=@)").Value.Split(':');

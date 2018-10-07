@@ -108,8 +108,7 @@ namespace goVisualNovel
             for (int i = 0; i < vn.Hookers.Count; i++)
                 ReadHooker(i);
 
-            if (vn.Hookers.Count < 2)
-                Hook1_CheckBox.CheckState = CheckState.Unchecked;
+            Hook1_CheckBox.CheckState = vn.Hookers.Count < 2 ? CheckState.Unchecked : CheckState.Checked;
 
             WordsFilter_TextBox.Text = string.Join(",", vn.WordsFilter);
 
@@ -189,12 +188,11 @@ namespace goVisualNovel
 
             Hook1_CheckBox.CheckStateChanged += (object o, EventArgs ea) =>
             {
-                if(Hook1_CheckBox.CheckState == CheckState.Checked)
+                if(Hook1_CheckBox.CheckState == CheckState.Checked && vn.Hookers.Count < MAX_HOOKERS_NUM)
                 {
-                    
                     AddHooker();
                 }
-                else if(Hook1_CheckBox.CheckState == CheckState.Unchecked)
+                else if(Hook1_CheckBox.CheckState == CheckState.Unchecked && vn.Hookers.Count > 1)
                 {
                     vn.Hookers.RemoveAt(vn.Hookers.Count - 1);
                 }
@@ -272,7 +270,13 @@ namespace goVisualNovel
         private void ImportFromHCode_Click(object sender, EventArgs e)
         {
             string str = "";
-        st: str = Interaction.InputBox("由于本程序对原提取器功能做了一些扩展，\n\n因此仅支持从特殊码中导入一部分设置。", "请输入特殊码", str);
+        st: str = Interaction.InputBox(
+                "本提取器仅支持从特殊码中导入部分设置。\n\n\n" +
+                "特殊码格式支持：\n" +
+                "/H(A|B|W|S|Q|H)[N](hook1[*bias1])[:hook2[*bias2]]\n" +
+                "@addr[:module_name]",
+                "请输入特殊码",
+                str);
             try
             {
                 if (string.IsNullOrEmpty(str)) return;
@@ -280,6 +284,7 @@ namespace goVisualNovel
                 vn.SetAttrsFromHCode(str);
 
                 ModuleName_TextBox.Text = vn.ModuleName;
+                Hook1_CheckBox.CheckState = vn.Hookers.Count < 2 ? CheckState.Unchecked : CheckState.Checked;
                 for (int i = 0; i < vn.Hookers.Count; i++)
                     ReadHooker(i);
             }

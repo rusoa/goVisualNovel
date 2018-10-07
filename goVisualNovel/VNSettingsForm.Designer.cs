@@ -102,8 +102,7 @@
             "shift-jis",
             "utf-8",
             "utf-16",
-            "utf-16-le",
-            "utf-16-be"});
+            "ascii"});
             this.ProcEncoding_ComboBox.Location = new System.Drawing.Point(204, 39);
             this.ProcEncoding_ComboBox.Name = "ProcEncoding_ComboBox";
             this.ProcEncoding_ComboBox.Size = new System.Drawing.Size(98, 20);
