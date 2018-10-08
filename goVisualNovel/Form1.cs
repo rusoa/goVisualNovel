@@ -27,10 +27,8 @@ namespace goVisualNovel
             TransparencyKey = BackColor;
             Paint += Form1_AutoHeight;
 
-            //WaitingLabel
-            WaitingLabel.BackColor = BackColorDefault;
-            WaitingLabel.Location = new Point((Width - WaitingLabel.Width) / 2, WordsTopMargin);
-            WaitingLabel.Padding = new Padding(0, 5, 0, 5);
+            //StatusLabel
+            StatusLabel.BackColor = BackColorDefault;
 
             //TextPanel
             TextPanel.Width = 1500;
@@ -44,6 +42,11 @@ namespace goVisualNovel
 
             //DicPanel
             DicPanel.MouseLeave += HideDic;
+        }
+
+        private void StatusLabel_Paint(object sender, PaintEventArgs e)
+        {
+            StatusLabel.Location = new Point((Width - StatusLabel.Width) / 2, WordsTopMargin);
         }
 
         private void Form1_AutoHeight(object sender, PaintEventArgs e)
@@ -68,7 +71,7 @@ namespace goVisualNovel
 
         public void RefreshText()
         {
-            WaitingLabel.Hide();
+            StatusLabel.Hide();
             ClearLastResult();
 
             int wordsCount = Program.TextTable.GetLength(0);

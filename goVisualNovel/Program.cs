@@ -28,10 +28,6 @@ namespace goVisualNovel
 
         #region global const
         public const int EXT_BYTES_MAX_SIZE = 233;
-        public const int WM_USER = 0x400;
-        public const int WM_EXT_TEXT_EXT = WM_USER + 233;
-        public const int WM_EXT_TEXT_EXIT_PASSIVE = WM_USER + 234;
-        public const int WM_EXT_TEXT_EXIT_ERROR = WM_USER + 235;
         #endregion
 
         #region global var
@@ -44,7 +40,7 @@ namespace goVisualNovel
             (char)0x00, (char)0x01, (char)0x02, (char)0x03, (char)0x04, (char)0x05, (char)0x06, (char)0x07, (char)0x08, (char)0x09, (char)0x0a,
             (char)0x0b, (char)0x0c, (char)0x0d, (char)0x0e, (char)0x0f, (char)0x10, (char)0x11, (char)0x12, (char)0x13, (char)0x14, (char)0x15,
             (char)0x16, (char)0x17, (char)0x18, (char)0x19, (char)0x20, (char)0x1a, (char)0x1b, (char)0x1c, (char)0x1d, (char)0x1e, (char)0x1f,
-            (char)0x22, (char)0x27, (char)0x5C, (char)0x7f, (char)0x85, (char)0x2028, (char)0x2029
+            (char)0x22, (char)0x27, (char)0x5C, (char)0x7f, (char)0x85, (char)0x2028, (char)0x2029, (char)0x3000
         };
         #endregion
 
@@ -65,7 +61,7 @@ namespace goVisualNovel
             Application.AddMessageFilter(new MyMsgFilter());
             welform = new WelcomeForm();
             welform.Show();
-            Application.Run();
+            Application.Run(welform);
         }
 
         #region Ext Text and Translation
@@ -98,14 +94,18 @@ namespace goVisualNovel
 
             form1 = new Form1();
             form1.Show();
+
+            form1.StatusLabel.Text = "正在等待程序开启...";
         }
 
         public static void StopExtText(int cd = 1500)
         {
             if (ExtTextThread == null || !ExtTextThread.IsAlive) return;
+
             Marshal.WriteByte(pStopExtText, 1);
             while (ExtTextThread.IsAlive && cd-- > 0) Thread.Sleep(1);
             if (cd <= 0) ExtTextThread.Abort();
+
             Marshal.FreeHGlobal(pHookers);
             Marshal.FreeHGlobal(pExtBuffer);
             Marshal.FreeHGlobal(pStopExtText);
@@ -114,10 +114,21 @@ namespace goVisualNovel
         public static void onExtText()
         {
             string OriginText = MyConverter.pBufferToString(pExtBuffer, EXT_BYTES_MAX_SIZE, vn.ProcEncoding);
+
+            //text pre-process
             OriginText = OriginText.Trim(WhiteSpaceChars);
-            foreach (string w in vn.WordsFilter) OriginText = OriginText.Replace(w, "");
+            int pos = OriginText.LastIndexOf('\0');
+            if (pos != -1) OriginText = OriginText.Substring(pos + 1);
+            if (OriginText == string.Empty) return;
+
+            //user filter
+            foreach (string w in vn.WordsFilter)
+                OriginText = OriginText.Replace(w, "");
+
             TextTable = WordProcess.Process(OriginText, vn.Language);
+
             form1.RefreshText();
+
             List<Task<string>> TranslateTasks = GenerateTranslateTasks(OriginText);
             foreach (Task<string> task in TranslateTasks)
             {
@@ -143,16 +154,12 @@ namespace goVisualNovel
         public static void onExtTextExitPassive()
         {
             if(form1 != null && !form1.IsDisposed) form1.Close();
-            if(welform != null && welform.IsDisposed)
-            {
-                welform = new WelcomeForm();
-                welform.Show();
-            }
+            if (welform != null && !welform.IsDisposed) welform.Show();
         }
 
-        public static void onExtTextExitError()
+        public static void onExtTextExitError(int e)
         {
-            MessageBox.Show("提取文字失败，请重试！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show("提取文字失败，请重试！错误码：" + e, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             onExtTextExitPassive();
         }
         #endregion

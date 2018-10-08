@@ -194,13 +194,13 @@ namespace goVisualNovel
                 MessageBox.Show("启动失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            Close();
+            Hide();
         }
 
         private void Exit_Click(object sender, EventArgs e)
         {
             SaveVNList();
-            Program.myExit();
+            Close();
         }
 
         private void Setting_Click(object sender, EventArgs e)

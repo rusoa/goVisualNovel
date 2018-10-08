@@ -1,5 +1,7 @@
 #include "procutils.h"
 
+using namespace std;
+
 bool EnableDebugPriv()
 {
     HANDLE hToken;
@@ -31,14 +33,14 @@ bool EnableDebugPriv()
 unsigned long GetPidByName(const wchar_t * name)
 {
     HANDLE hProcSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if(hProcSnap == INVALID_HANDLE_VALUE) throw "failed to get process snapshot";
+    if(hProcSnap == INVALID_HANDLE_VALUE) throw exception("failed to get process snapshot");
 
     PROCESSENTRY32W pe32;
     pe32.dwSize = sizeof(PROCESSENTRY32W);
     if(!Process32FirstW(hProcSnap, &pe32))
     {
         CloseHandle(hProcSnap);
-        throw "failed to read process snapshot";
+        throw exception("failed to read process snapshot");
     }
 
     unsigned long pid = 0;
@@ -58,14 +60,14 @@ unsigned long GetPidByName(const wchar_t * name)
 unsigned long GetMtid(unsigned long pid)
 {
     HANDLE hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-    if(hThreadSnap == INVALID_HANDLE_VALUE) throw "failed to get thread snapshot";
+    if(hThreadSnap == INVALID_HANDLE_VALUE) throw exception("failed to get thread snapshot");
 
     THREADENTRY32 te32;
     te32.dwSize = sizeof(THREADENTRY32);
     if(!Thread32First(hThreadSnap, &te32))
     {
         CloseHandle(hThreadSnap);
-        throw "failed to read thread snapshot";
+        throw exception("failed to read thread snapshot");
     }
 
     do
@@ -75,20 +77,20 @@ unsigned long GetMtid(unsigned long pid)
     } while(Thread32Next(hThreadSnap, &te32));
 
     CloseHandle(hThreadSnap);
-    throw "failed to find main thread id";
+    throw exception("failed to find main thread id");
 }
 
 void * GetBaseAddr(unsigned long pid)
 {
     HANDLE hModSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid);
-    if(hModSnap == INVALID_HANDLE_VALUE) throw "failed to get module snapshot";
+    if(hModSnap == INVALID_HANDLE_VALUE) throw exception("failed to get module snapshot");
 
     MODULEENTRY32 me32;
     me32.dwSize = sizeof(MODULEENTRY32);
     if(!Module32First(hModSnap, &me32))
     {
         CloseHandle(hModSnap);
-        throw "failed to read module snapshot";
+        throw exception("failed to read module snapshot");
     }
 
     do
@@ -98,5 +100,5 @@ void * GetBaseAddr(unsigned long pid)
     } while(Module32Next(hModSnap, &me32));
 
     CloseHandle(hModSnap);
-    throw "failed to find base addr";
+    throw exception("failed to find base addr");
 }

@@ -26,7 +26,7 @@ namespace goVisualNovel
         public string ProcEncoding { get; set; }
         public string ModuleName { get; set; }
         public List<Hooker> Hookers { get; set; }
-        public string[] WordsFilter { get; set; }
+        public List<string> WordsFilter { get; set; }
 
         public VisualNovel(bool CreateNewHook = false)
         {
@@ -34,7 +34,7 @@ namespace goVisualNovel
             Language = "ja";
             ProcEncoding = "shift-jis";
             Hookers = new List<Hooker>();
-            WordsFilter = new string[0];
+            WordsFilter = new List<string>();
         }
 
         /**
@@ -47,7 +47,7 @@ namespace goVisualNovel
             vn.ProcEncoding = ProcEncoding;
             vn.ModuleName = ModuleName;
             vn.Hookers = new List<Hooker>(Hookers.ToArray());
-            WordsFilter.CopyTo(vn.WordsFilter, 0);
+            vn.WordsFilter = new List<string>(WordsFilter.ToArray());
         }
 
         public void SetAttrsFromHCode(string HCode)
@@ -55,7 +55,7 @@ namespace goVisualNovel
             HCode = HCode.Trim(Program.WhiteSpaceChars);
             if (HCode == string.Empty) throw new ArgumentException();
 
-            HCode = Regex.Replace(HCode, "^/H.N?", ""); //skip "A|B|W|S|Q|H" and "N"
+            HCode = Regex.Replace(HCode, "^/[Hh].[Nn]?", ""); //skip "A|B|W|S|Q|H" and "N"
             HCode = Regex.Replace(HCode, "#.*?(?=@)", ""); //skip "level"
 
             //skip "name or ordinal"

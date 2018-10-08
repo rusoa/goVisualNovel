@@ -34,6 +34,7 @@ namespace goVisualNovel
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.Clear_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.Setting_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.Exit_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
@@ -46,8 +47,7 @@ namespace goVisualNovel
             this.explanation_dic = new System.Windows.Forms.Label();
             this.property_dic = new System.Windows.Forms.Label();
             this.pronunciation_dic = new System.Windows.Forms.Label();
-            this.WaitingLabel = new System.Windows.Forms.Label();
-            this.Clear_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
+            this.StatusLabel = new System.Windows.Forms.Label();
             this.contextMenuStrip1.SuspendLayout();
             this.DicPanel.SuspendLayout();
             this.SuspendLayout();
@@ -67,24 +67,31 @@ namespace goVisualNovel
             this.toolStripSeparator1,
             this.Exit_MenuStrip});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 98);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(101, 76);
+            // 
+            // Clear_MenuStrip
+            // 
+            this.Clear_MenuStrip.Name = "Clear_MenuStrip";
+            this.Clear_MenuStrip.Size = new System.Drawing.Size(100, 22);
+            this.Clear_MenuStrip.Text = "清屏";
+            this.Clear_MenuStrip.Click += new System.EventHandler(this.Clear_MenuStrip_Click);
             // 
             // Setting_MenuStrip
             // 
             this.Setting_MenuStrip.Name = "Setting_MenuStrip";
-            this.Setting_MenuStrip.Size = new System.Drawing.Size(180, 22);
+            this.Setting_MenuStrip.Size = new System.Drawing.Size(100, 22);
             this.Setting_MenuStrip.Text = "设置";
             this.Setting_MenuStrip.Click += new System.EventHandler(this.Setting_MenuStrip_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(97, 6);
             // 
             // Exit_MenuStrip
             // 
             this.Exit_MenuStrip.Name = "Exit_MenuStrip";
-            this.Exit_MenuStrip.Size = new System.Drawing.Size(180, 22);
+            this.Exit_MenuStrip.Size = new System.Drawing.Size(100, 22);
             this.Exit_MenuStrip.Text = "退出";
             this.Exit_MenuStrip.Click += new System.EventHandler(this.Exit_MenuStrip_Click);
             // 
@@ -210,30 +217,25 @@ namespace goVisualNovel
             this.pronunciation_dic.Text = "「めざめる」";
             this.pronunciation_dic.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // WaitingLabel
+            // StatusLabel
             // 
-            this.WaitingLabel.AutoSize = true;
-            this.WaitingLabel.Font = new System.Drawing.Font("宋体", 24F);
-            this.WaitingLabel.ForeColor = System.Drawing.Color.White;
-            this.WaitingLabel.Location = new System.Drawing.Point(450, 6);
-            this.WaitingLabel.Name = "WaitingLabel";
-            this.WaitingLabel.Size = new System.Drawing.Size(319, 33);
-            this.WaitingLabel.TabIndex = 6;
-            this.WaitingLabel.Text = "正在等待提取文字...";
-            // 
-            // Clear_MenuStrip
-            // 
-            this.Clear_MenuStrip.Name = "Clear_MenuStrip";
-            this.Clear_MenuStrip.Size = new System.Drawing.Size(180, 22);
-            this.Clear_MenuStrip.Text = "清屏";
-            this.Clear_MenuStrip.Click += new System.EventHandler(this.Clear_MenuStrip_Click);
+            this.StatusLabel.AutoSize = true;
+            this.StatusLabel.Font = new System.Drawing.Font("宋体", 24F);
+            this.StatusLabel.ForeColor = System.Drawing.Color.White;
+            this.StatusLabel.Location = new System.Drawing.Point(450, 6);
+            this.StatusLabel.Name = "StatusLabel";
+            this.StatusLabel.Padding = new System.Windows.Forms.Padding(0, 5, 0, 5);
+            this.StatusLabel.Size = new System.Drawing.Size(111, 43);
+            this.StatusLabel.TabIndex = 6;
+            this.StatusLabel.Text = "状态栏";
+            this.StatusLabel.Paint += new System.Windows.Forms.PaintEventHandler(this.StatusLabel_Paint);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1000, 500);
-            this.Controls.Add(this.WaitingLabel);
+            this.Controls.Add(this.StatusLabel);
             this.Controls.Add(this.DicPanel);
             this.Controls.Add(this.TranslationPanel);
             this.Controls.Add(this.TextPanel);
@@ -267,7 +269,7 @@ namespace goVisualNovel
         private System.Windows.Forms.Label word_dic;
         private System.Windows.Forms.Label spliter_dic;
         private System.Windows.Forms.Label copy_dic;
-        private System.Windows.Forms.Label WaitingLabel;
         private System.Windows.Forms.ToolStripMenuItem Clear_MenuStrip;
+        public System.Windows.Forms.Label StatusLabel;
     }
 }

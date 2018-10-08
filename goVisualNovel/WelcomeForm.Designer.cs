@@ -28,18 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WelcomeForm));
             this.Select_Btn = new System.Windows.Forms.Button();
             this.Exit_Btn = new System.Windows.Forms.Button();
             this.New = new System.Windows.Forms.Button();
             this.Delete = new System.Windows.Forms.Button();
             this.VNTable = new System.Windows.Forms.DataGridView();
+            this.VNName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.VNSettings = new System.Windows.Forms.DataGridViewImageColumn();
             this.Up = new System.Windows.Forms.Button();
             this.Down = new System.Windows.Forms.Button();
             this.Setting_Btn = new System.Windows.Forms.Button();
-            this.VNName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.VNSettings = new System.Windows.Forms.DataGridViewImageColumn();
             ((System.ComponentModel.ISupportInitialize)(this.VNTable)).BeginInit();
             this.SuspendLayout();
             // 
@@ -96,14 +96,14 @@
             this.VNTable.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.VNTable.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
             this.VNTable.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("宋体", 9F);
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.VNTable.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("宋体", 9F);
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.VNTable.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.VNTable.ColumnHeadersHeight = 40;
             this.VNTable.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.VNTable.ColumnHeadersVisible = false;
@@ -128,6 +128,24 @@
             this.VNTable.SelectionChanged += new System.EventHandler(this.VNTable_SelectionChanged);
             this.VNTable.Click += new System.EventHandler(this.VNTable_Click);
             this.VNTable.Paint += new System.Windows.Forms.PaintEventHandler(this.VNTable_Paint);
+            // 
+            // VNName
+            // 
+            this.VNName.DataPropertyName = "VNName";
+            this.VNName.HeaderText = "名称";
+            this.VNName.Name = "VNName";
+            this.VNName.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.VNName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.VNName.Width = 370;
+            // 
+            // VNSettings
+            // 
+            this.VNSettings.HeaderText = "配置";
+            this.VNSettings.Image = ((System.Drawing.Image)(resources.GetObject("VNSettings.Image")));
+            this.VNSettings.ImageLayout = System.Windows.Forms.DataGridViewImageCellLayout.Zoom;
+            this.VNSettings.Name = "VNSettings";
+            this.VNSettings.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.VNSettings.Width = 36;
             // 
             // Up
             // 
@@ -160,24 +178,6 @@
             this.Setting_Btn.Text = "主设置";
             this.Setting_Btn.UseVisualStyleBackColor = true;
             this.Setting_Btn.Click += new System.EventHandler(this.Setting_Click);
-            // 
-            // VNName
-            // 
-            this.VNName.DataPropertyName = "VNName";
-            this.VNName.HeaderText = "名称";
-            this.VNName.Name = "VNName";
-            this.VNName.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.VNName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            this.VNName.Width = 370;
-            // 
-            // VNSettings
-            // 
-            this.VNSettings.HeaderText = "配置";
-            this.VNSettings.Image = ((System.Drawing.Image)(resources.GetObject("VNSettings.Image")));
-            this.VNSettings.ImageLayout = System.Windows.Forms.DataGridViewImageCellLayout.Zoom;
-            this.VNSettings.Name = "VNSettings";
-            this.VNSettings.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.VNSettings.Width = 36;
             // 
             // WelcomeForm
             // 

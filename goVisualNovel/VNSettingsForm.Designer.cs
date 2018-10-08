@@ -266,8 +266,10 @@
             this.Hook0BytesPerRead_ComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.Hook0BytesPerRead_ComboBox.FormattingEnabled = true;
             this.Hook0BytesPerRead_ComboBox.Items.AddRange(new object[] {
+            "0",
             "1",
-            "2"});
+            "2",
+            "3"});
             this.Hook0BytesPerRead_ComboBox.Location = new System.Drawing.Point(98, 232);
             this.Hook0BytesPerRead_ComboBox.Name = "Hook0BytesPerRead_ComboBox";
             this.Hook0BytesPerRead_ComboBox.Size = new System.Drawing.Size(42, 20);
@@ -308,8 +310,10 @@
             this.Hook1BytesPerRead_ComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.Hook1BytesPerRead_ComboBox.FormattingEnabled = true;
             this.Hook1BytesPerRead_ComboBox.Items.AddRange(new object[] {
+            "0",
             "1",
-            "2"});
+            "2",
+            "3"});
             this.Hook1BytesPerRead_ComboBox.Location = new System.Drawing.Point(95, 348);
             this.Hook1BytesPerRead_ComboBox.Name = "Hook1BytesPerRead_ComboBox";
             this.Hook1BytesPerRead_ComboBox.Size = new System.Drawing.Size(45, 20);

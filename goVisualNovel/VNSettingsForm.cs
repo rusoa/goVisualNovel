@@ -41,10 +41,10 @@ namespace goVisualNovel
             { "ecx", -0x18 },
             { "edx", -0x1c },
             { "ebx", -0x20 },
-            { "esi", 0x24 },
-            { "ebi", 0x28 },
-            { "esp", 0x00 },
-            { "ebp", 0x04 },
+            { "esi", -0x24 },
+            { "ebi", -0x28 },
+            { "esp",  0x00 },
+            { "ebp", -0x04 },
         };
         #endregion
 
@@ -123,7 +123,7 @@ namespace goVisualNovel
                 { vn.Language = (string)Language_ComboBox.SelectedValue; };
 
             ProcEncoding_ComboBox.SelectedIndexChanged += (object o, EventArgs ea) =>
-                { vn.ProcEncoding = (string)ProcEncoding_ComboBox.SelectedValue; };
+                { vn.ProcEncoding = (string)ProcEncoding_ComboBox.SelectedItem; };
 
             ModuleName_TextBox.TextChanged += (object o, EventArgs ea) =>
                 { vn.ModuleName = ModuleName_TextBox.Text; };
@@ -200,7 +200,14 @@ namespace goVisualNovel
 
             WordsFilter_TextBox.TextChanged += (object o, EventArgs ea) =>
             {
-                vn.WordsFilter = ((TextBox)o).Text.Split(',');
+                string text = ((TextBox)o).Text;
+                vn.WordsFilter.Clear();
+                if (text == null) return;
+                foreach(string s in text.Split(','))
+                {
+                    if (string.IsNullOrEmpty(s)) continue;
+                    vn.WordsFilter.Add(s);
+                }
             };
 
             #endregion
