@@ -193,16 +193,8 @@ namespace goVisualNovel
         private void Select_Click(object sender, EventArgs e)
         {
             SaveVNList();
-            try
-            {
-                Program.StartExtText(VNList[VNTable.SelectedRows[0].Index]);
-            }
-            catch(Exception)
-            {
-                MessageBox.Show("启动失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
             Hide();
+            Program.StartExtText(VNList[VNTable.SelectedRows[0].Index]);
         }
 
         private void Exit_Click(object sender, EventArgs e)
@@ -213,7 +205,10 @@ namespace goVisualNovel
 
         private void Setting_Click(object sender, EventArgs e)
         {
-            Program.ShowSettingsForm();
+            if (Program.setform == null || Program.setform.IsDisposed)
+                Program.setform = new SettingsForm();
+
+            Program.setform.Show();
         }
 
         private void SaveVNList()
@@ -223,6 +218,24 @@ namespace goVisualNovel
             sw.Write(JsonConvert.SerializeObject(VNList));
             sw.Close();
             fs.Close();
+        }
+        #endregion
+
+        #region contentMenuStrip
+        private void Clear_MenuStrip_Click(object sender, EventArgs e)
+        {
+            Program.form1.ClearLastResult();
+        }
+
+        private void Setting_MenuStrip_Click(object sender, EventArgs e)
+        {
+            Setting_Click(sender, e);
+        }
+
+        private void Exit_MenuStrip_Click(object sender, EventArgs e)
+        {
+            Program.StopExtText();
+            Application.Exit();
         }
         #endregion
     }

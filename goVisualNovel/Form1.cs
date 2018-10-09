@@ -14,50 +14,8 @@ namespace goVisualNovel
 {
     public partial class Form1 : Form
     {
-        public Form1()
-        {
-            InitializeComponent();
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            //this
-            Width = Screen.GetBounds(this).Width;
-            Location = new Point(0, 0);
-            TransparencyKey = BackColor;
-            Paint += Form1_AutoHeight;
-
-            //StatusLabel
-            StatusLabel.BackColor = BackColorDefault;
-
-            //TextPanel
-            TextPanel.Width = 1500;
-            TextPanel.Height = 0;
-            TextPanel.Location = new Point((Width - TextPanel.Width) / 2, WordsTopMargin);
-
-            //TranslationPanel
-            TranslationPanel.Width = 1500;
-            TranslationPanel.Height = 0;
-            TranslationPanel.Location = new Point((Width - TranslationPanel.Width) / 2, TranslationTopMargin);
-
-            //DicPanel
-            DicPanel.MouseLeave += HideDic;
-        }
-
-        private void StatusLabel_Paint(object sender, PaintEventArgs e)
-        {
-            StatusLabel.Location = new Point((Width - StatusLabel.Width) / 2, WordsTopMargin);
-        }
-
-        private void Form1_AutoHeight(object sender, PaintEventArgs e)
-        {
-            int Bottom = 0;
-            foreach (Control c in Controls)
-                Bottom = Math.Max(Bottom, c.Bottom);
-            Height = Bottom;
-        }
-
-        #region text and translation
+        #region vars
+        private int TextMaxWidth = 1500;
         private int WordsTopMargin = 6;
         private int WordsMargin = 1;
         private int WordsRawMargin = 1;
@@ -68,11 +26,61 @@ namespace goVisualNovel
         private Color BackColorDefault = Color.FromArgb(30, 30, 30);
         private Color BackColorEmpha = Color.Black;
         private string[] PropertyFilter = new string[] { "記号" };
+        private string WaitingQueryText = "正在查询...";
+        private string NotFoundText = "未找到";
+        private Label WordLabelNow = null;
+        private Dictionary<int, string> ExplanationBuffer = new Dictionary<int, string>();
 
+        private Action<object, PaintEventArgs> AutoHeight = (object o, PaintEventArgs pea) =>
+        {
+            int a = 0;
+            foreach (Control c in ((Control)o).Controls)
+                a = Math.Max(a, c.Bottom);
+            ((Control)o).Height = a;
+        };
+        #endregion
+
+        #region this
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            Width = Screen.GetBounds(this).Width;
+            Location = new Point(0, 0);
+            TransparencyKey = BackColor;
+            Paint += new PaintEventHandler(AutoHeight);
+
+            StatusLabel.BackColor = BackColorDefault;
+            StatusLabel.Paint += (object o, PaintEventArgs pea) =>
+            {
+                Graphics g = CreateGraphics();
+                SizeF sizeF = g.MeasureString(StatusLabel.Text, TranslationFont);
+                g.Dispose();
+                StatusLabel.Size = new Size((int)Math.Ceiling(sizeF.Width) + 4, (int)Math.Ceiling(sizeF.Height));
+                StatusLabel.Location = new Point((Width - StatusLabel.Width) / 2, WordsTopMargin);
+            };
+
+            TextPanel.Width = TextMaxWidth;
+            TextPanel.Height = 0;
+            TextPanel.Location = new Point((Width - TextPanel.Width) / 2, WordsTopMargin);
+            TextPanel.Paint += (object o, PaintEventArgs pea) =>
+                { TranslationPanel.Location = new Point(TranslationPanel.Location.X, TextPanel.Bottom + TranslationTopMargin); };
+
+            TranslationPanel.Width = TextMaxWidth;
+            TranslationPanel.Height = 0;
+            TranslationPanel.Location = new Point((Width - TranslationPanel.Width) / 2, TranslationTopMargin);
+
+            DicPanel.MouseLeave += HideDic;
+        }
+        #endregion
+
+        #region text and translation
         public void RefreshText()
         {
             StatusLabel.Hide();
-            ClearLastResult();
 
             int wordsCount = Program.TextTable.GetLength(0);
             if (wordsCount == 0) return;
@@ -82,24 +90,25 @@ namespace goVisualNovel
             Graphics g = TextPanel.CreateGraphics(); //for counting the text size
             int maxWordHeight = 0;
             int raw = 0; //count of raws
+
             for (int i = 0; i < wordsCount; i++)
             {
-                //generate new word label
+                //generate new word labels
                 words[i] = new Label();
                 words[i].AutoSize = false;
                 words[i].Text = Program.TextTable[i, 0];
                 words[i].Font = WordsFont;
-                SizeF sizeF = g.MeasureString(words[i].Text, WordsFont);
-                words[i].Size = new Size((int)Math.Ceiling(sizeF.Width) + 4, words[i].Height); //keep out the margin, else the text would be displayed incompletely. The height will be dealed after.
-                maxWordHeight = Math.Max(maxWordHeight, (int)Math.Ceiling(sizeF.Height));
                 words[i].TextAlign = ContentAlignment.MiddleCenter;
-                words[i].Margin = new Padding(0);
                 words[i].ForeColor = Color.White;
-                //divide the words to default and emphasize by property
+                SizeF sizeF = g.MeasureString(words[i].Text, WordsFont);
+                words[i].Size = new Size((int)Math.Ceiling(sizeF.Width) + 4, words[i].Height); //make ample width
+                maxWordHeight = Math.Max(maxWordHeight, (int)Math.Ceiling(sizeF.Height)); //will be set after
+                
+                //group the words by property
                 if(!PropertyFilter.Contains(Program.TextTable[i, 1]))
                 {
-                    words[i].MouseEnter += (object sender, EventArgs e) => { ((Label)sender).BackColor = BackColorDefault; };
-                    words[i].MouseLeave += (object sender, EventArgs e) => { ((Label)sender).BackColor = BackColorEmpha; };
+                    words[i].MouseEnter += (object o, EventArgs ea) => { ((Label)o).BackColor = BackColorDefault; };
+                    words[i].MouseLeave += (object o, EventArgs ea) => { ((Label)o).BackColor = BackColorEmpha; };
                     words[i].MouseHover += ShowDic;
                     words[i].MouseLeave += HideDic;
                     words[i].BackColor = BackColorEmpha;
@@ -108,6 +117,7 @@ namespace goVisualNovel
                 {
                     words[i].BackColor = BackColorDefault;
                 }
+
                 //divide raws
                 if (rawMap[raw, 1] + words[i].Width > TextPanel.Width)
                 {
@@ -119,37 +129,28 @@ namespace goVisualNovel
             }
             g.Dispose();
 
-            //adjust the height to a equal value (max height)
+            //set all the height to the max
             for (int i = 0; i < wordsCount; i++)
                 words[i].Size = new Size(words[i].Width, maxWordHeight);
 
             //allocate to different raws and set position
-            rawMap[raw + 1, 0] = wordsCount;
+            rawMap[raw + 1, 0] = wordsCount; //boundary condition
             for (int r = 0; r <= raw; r++)
             {
                 words[rawMap[r, 0]].Location = new Point(Math.Max((TextPanel.Width - rawMap[r, 1]) / 2, 0), (maxWordHeight + WordsRawMargin) * r);
                 for (int i = rawMap[r, 0] + 1; i < rawMap[r + 1, 0]; i++)
                     words[i].Location = new Point(words[i - 1].Location.X + words[i - 1].Width + WordsMargin, words[i - 1].Location.Y);
             }
-            
-            //confirm the index
+
+            //set the index for easily finding
             TextPanel.Controls.AddRange(words);
             for (int i = 0; i < wordsCount; i++)
                 TextPanel.Controls.SetChildIndex(words[i], i);
 
             TextPanel.Height = maxWordHeight * (raw + 1) + WordsRawMargin * raw;
-
-            TranslationPanel.Location = new Point(TranslationPanel.Location.X, TextPanel.Bottom + TranslationTopMargin);
         }
 
-        private void ClearLastResult()
-        {
-            TextPanel.Controls.Clear();
-            TranslationPanel.Controls.Clear();
-            ExplanationBuffer.Clear();
-        }
-
-        //it's a method that crosses between the threads, so we write like this
+        //it's a cross-thread method
         private delegate void RefreshTranslationDelegate(int i, string str);
         public void RefreshTranslation(int i, string str)
         {
@@ -169,26 +170,25 @@ namespace goVisualNovel
                 g.Dispose();
                 t.Size = new Size((int)Math.Ceiling(sizeF.Width) + 4, (int)Math.Ceiling(sizeF.Height));
                 t.TextAlign = ContentAlignment.MiddleCenter;
-                t.Margin = new Padding(0);
                 t.ForeColor = Color.White;
                 t.BackColor = BackColorDefault;
                 t.Location = new Point((TranslationPanel.Width - t.Width) / 2, (t.Height + TranslationRawMargin) * i);
 
                 TranslationPanel.Controls.Add(t);
-                int MaxBottom = 0;
-                foreach (Control c in TranslationPanel.Controls)
-                    MaxBottom = Math.Max(MaxBottom, c.Bottom);
-                TranslationPanel.Height = MaxBottom;
+
+                AutoHeight(TranslationPanel, null);
             }
+        }
+
+        public void ClearLastResult()
+        {
+            TextPanel.Controls.Clear();
+            TranslationPanel.Controls.Clear();
+            ExplanationBuffer.Clear();
         }
         #endregion
 
         #region DicPanel
-        private string WaitingQueryText = "正在查询...";
-        private string NotFoundText = "未找到";
-        private Label WordLabelNow = null;
-        private Dictionary<int, string> ExplanationBuffer = new Dictionary<int, string>();
-
         private void ShowDic(object sender, EventArgs e)
         {
             if (DicPanel.Visible && WordLabelNow == (Label)sender) return;
@@ -215,23 +215,25 @@ namespace goVisualNovel
 
         private void HideDic(object sender, EventArgs e)
         {
-            if(WordLabelNow != null)
-            {
-                Rectangle rl = WordLabelNow.RectangleToScreen(WordLabelNow.ClientRectangle);
-                Rectangle rp = DicPanel.RectangleToScreen(DicPanel.ClientRectangle);
-                Rectangle r = new Rectangle(rl.Left, rl.Bottom, rp.Right - rl.Left, rp.Top - rl.Bottom);
-                if (r.Contains(MousePosition) || rl.Contains(MousePosition) || rp.Contains(MousePosition)) return;
-            }
+            if (WordLabelNow == null) return;
+
+            Rectangle rl = WordLabelNow.RectangleToScreen(WordLabelNow.ClientRectangle);
+            Rectangle rp = DicPanel.RectangleToScreen(DicPanel.ClientRectangle);
+            Rectangle r = new Rectangle(rl.Left, rl.Bottom, rp.Right - rl.Left, rp.Top - rl.Bottom);
+            if (r.Contains(MousePosition) || rl.Contains(MousePosition) || rp.Contains(MousePosition)) return;
+
             DicPanel.Hide();
         }
 
         private void DicPanel_Paint(object sender, PaintEventArgs e)
         {
             int i = TextPanel.Controls.GetChildIndex(WordLabelNow);
+
             word_dic.Text = WordLabelNow.Text;
             property_dic.Text = Program.TextTable[i, 1];
             pronunciation_dic.Text = "「" + Program.TextTable[i, 2] + "」";
-            Form1_AutoHeight(null, null);
+
+            OnPaint(null);
         }
 
         private delegate void OnWordExplanationDelegate(string[] strs);
@@ -240,8 +242,7 @@ namespace goVisualNovel
             if (DicPanel.InvokeRequired)
             {
                 OnWordExplanationDelegate d = OnWordExplanation;
-                //the invoke method push all the object in object[] to d as params
-                DicPanel.Invoke(d, new object[] { strs });
+                DicPanel.Invoke(d, new object[] { strs }); //the invoke method recognize what in object[] as params
             }
             else
             {
@@ -259,9 +260,7 @@ namespace goVisualNovel
                 ExplanationBuffer.Add(TextPanel.Controls.GetChildIndex(WordLabelNow), explanation_dic.Text);
             }
         }
-        #endregion
 
-        #region copy button on DicPanel
         private void copy_dic_Click(object sender, EventArgs e)
         {
             Clipboard.SetText(word_dic.Text);
@@ -287,23 +286,6 @@ namespace goVisualNovel
         private void copy_dic_MouseUp(object sender, MouseEventArgs e)
         {
             ((Label)sender).ForeColor = Color.Silver;
-        }
-        #endregion
-
-        #region contentMenuStrip
-        private void Clear_MenuStrip_Click(object sender, EventArgs e)
-        {
-            ClearLastResult();
-        }
-
-        private void Setting_MenuStrip_Click(object sender, EventArgs e)
-        {
-            Program.ShowSettingsForm();
-        }
-
-        private void Exit_MenuStrip_Click(object sender, EventArgs e)
-        {
-            Program.myExit();
         }
         #endregion
     }

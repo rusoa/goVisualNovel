@@ -26,11 +26,9 @@ namespace goVisualNovel
         private static extern int GetCurrentThreadId(); //get true thread id, not managed
         #endregion
 
-        #region global const
+        #region vars
         public const int EXT_BYTES_MAX_SIZE = 233;
-        #endregion
 
-        #region global var
         public static Form1 form1;
         public static WelcomeForm welform;
         public static SettingsForm setform;
@@ -42,9 +40,7 @@ namespace goVisualNovel
             (char)0x16, (char)0x17, (char)0x18, (char)0x19, (char)0x20, (char)0x1a, (char)0x1b, (char)0x1c, (char)0x1d, (char)0x1e, (char)0x1f,
             (char)0x22, (char)0x27, (char)0x5C, (char)0x7f, (char)0x85, (char)0x2028, (char)0x2029, (char)0x3000
         };
-        #endregion
 
-        #region private var
         private static Thread ExtTextThread;
         private volatile static IntPtr pHookers;
         private volatile static IntPtr pExtBuffer;
@@ -114,6 +110,8 @@ namespace goVisualNovel
 
         public static void onExtText()
         {
+            form1.ClearLastResult();
+
             string OriginText = MyConverter.pBufferToString(pExtBuffer, EXT_BYTES_MAX_SIZE, vn.ProcEncoding);
 
             //pre-process
@@ -141,6 +139,7 @@ namespace goVisualNovel
         private static List<Task<string>> GenerateTranslateTasks(string OriginText)
         {
             List<Task<string>> TranslateTasks = new List<Task<string>>();
+
             if (Properties.Settings.Default.Youdao)
                 TranslateTasks.Add(new Task<string>(() =>
                     new Youdao(Properties.Settings.Default.Youdao_AppKey,
@@ -149,12 +148,13 @@ namespace goVisualNovel
                         vn.Language,
                         Properties.Settings.Default.LocalLang)
                 ));
+
             return TranslateTasks;
         }
 
         public static void onExtTextExitPassive()
         {
-            if(form1 != null && !form1.IsDisposed) form1.Close();
+            if (form1 != null && !form1.IsDisposed) form1.Close();
             if (welform != null && !welform.IsDisposed) welform.Show();
         }
 
@@ -164,25 +164,5 @@ namespace goVisualNovel
             onExtTextExitPassive();
         }
         #endregion
-
-        public static void ShowSettingsForm()
-        {
-            if (setform != null && !setform.IsDisposed)
-            {
-                setform.Focus();
-            }
-            else
-            {
-                setform = new SettingsForm();
-                setform.Show();
-            }
-        }
-
-        //exit gently
-        public static void myExit()
-        {
-            StopExtText();
-            Application.Exit();
-        }
     }
 }

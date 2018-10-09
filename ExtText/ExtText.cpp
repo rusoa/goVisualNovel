@@ -218,7 +218,7 @@ void __stdcall ExtText(
             racer.stop();
         case WM_EXT_TEXT_ENTER_DEBUG_FAILED:
             for(int i = 0; i < HookersNum; i++)
-                WriteProcessMemory(hProc, Hookers[i].Addr, &OriginalCodes, sizeof(char), NULL);
+                WriteProcessMemory(hProc, Hookers[i].Addr, &OriginalCodes[i], sizeof(char), NULL);
         default:
             if(OriginalCodes) delete OriginalCodes;
             PostThreadMessage(MainThreadId, e, NULL, NULL);

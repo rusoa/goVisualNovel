@@ -30,14 +30,6 @@ namespace goVisualNovel
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
-            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.Clear_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
-            this.Setting_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.Exit_MenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.TextPanel = new System.Windows.Forms.Panel();
             this.TranslationPanel = new System.Windows.Forms.Panel();
             this.DicPanel = new System.Windows.Forms.Panel();
@@ -48,52 +40,8 @@ namespace goVisualNovel
             this.property_dic = new System.Windows.Forms.Label();
             this.pronunciation_dic = new System.Windows.Forms.Label();
             this.StatusLabel = new System.Windows.Forms.Label();
-            this.contextMenuStrip1.SuspendLayout();
             this.DicPanel.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // notifyIcon1
-            // 
-            this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip1;
-            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
-            this.notifyIcon1.Text = "goVisualNovel";
-            this.notifyIcon1.Visible = true;
-            // 
-            // contextMenuStrip1
-            // 
-            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.Clear_MenuStrip,
-            this.Setting_MenuStrip,
-            this.toolStripSeparator1,
-            this.Exit_MenuStrip});
-            this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(101, 76);
-            // 
-            // Clear_MenuStrip
-            // 
-            this.Clear_MenuStrip.Name = "Clear_MenuStrip";
-            this.Clear_MenuStrip.Size = new System.Drawing.Size(100, 22);
-            this.Clear_MenuStrip.Text = "清屏";
-            this.Clear_MenuStrip.Click += new System.EventHandler(this.Clear_MenuStrip_Click);
-            // 
-            // Setting_MenuStrip
-            // 
-            this.Setting_MenuStrip.Name = "Setting_MenuStrip";
-            this.Setting_MenuStrip.Size = new System.Drawing.Size(100, 22);
-            this.Setting_MenuStrip.Text = "设置";
-            this.Setting_MenuStrip.Click += new System.EventHandler(this.Setting_MenuStrip_Click);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(97, 6);
-            // 
-            // Exit_MenuStrip
-            // 
-            this.Exit_MenuStrip.Name = "Exit_MenuStrip";
-            this.Exit_MenuStrip.Size = new System.Drawing.Size(100, 22);
-            this.Exit_MenuStrip.Text = "退出";
-            this.Exit_MenuStrip.Click += new System.EventHandler(this.Exit_MenuStrip_Click);
             // 
             // TextPanel
             // 
@@ -219,16 +167,15 @@ namespace goVisualNovel
             // 
             // StatusLabel
             // 
-            this.StatusLabel.AutoSize = true;
+            this.StatusLabel.BackColor = System.Drawing.Color.Black;
             this.StatusLabel.Font = new System.Drawing.Font("宋体", 24F);
             this.StatusLabel.ForeColor = System.Drawing.Color.White;
             this.StatusLabel.Location = new System.Drawing.Point(450, 6);
             this.StatusLabel.Name = "StatusLabel";
-            this.StatusLabel.Padding = new System.Windows.Forms.Padding(0, 5, 0, 5);
             this.StatusLabel.Size = new System.Drawing.Size(111, 43);
             this.StatusLabel.TabIndex = 6;
             this.StatusLabel.Text = "状态栏";
-            this.StatusLabel.Paint += new System.Windows.Forms.PaintEventHandler(this.StatusLabel_Paint);
+            this.StatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // Form1
             // 
@@ -246,7 +193,6 @@ namespace goVisualNovel
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.TopMost = true;
             this.Load += new System.EventHandler(this.Form1_Load);
-            this.contextMenuStrip1.ResumeLayout(false);
             this.DicPanel.ResumeLayout(false);
             this.DicPanel.PerformLayout();
             this.ResumeLayout(false);
@@ -255,11 +201,6 @@ namespace goVisualNovel
         }
 
         #endregion
-        private System.Windows.Forms.NotifyIcon notifyIcon1;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem Exit_MenuStrip;
-        private System.Windows.Forms.ToolStripMenuItem Setting_MenuStrip;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.Panel TextPanel;
         private System.Windows.Forms.Panel TranslationPanel;
         private System.Windows.Forms.Panel DicPanel;
@@ -269,7 +210,6 @@ namespace goVisualNovel
         private System.Windows.Forms.Label word_dic;
         private System.Windows.Forms.Label spliter_dic;
         private System.Windows.Forms.Label copy_dic;
-        private System.Windows.Forms.ToolStripMenuItem Clear_MenuStrip;
         public System.Windows.Forms.Label StatusLabel;
     }
 }
