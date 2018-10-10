@@ -73,6 +73,7 @@ namespace goVisualNovel
             int Mtid = GetCurrentThreadId();
 
             pExtBuffer = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(byte)) * EXT_BYTES_MAX_SIZE);
+            for (int i = 0; i < EXT_BYTES_MAX_SIZE; i++) Marshal.WriteByte(pExtBuffer, i, 0);
 
             pStopExtText = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(bool)));
             Marshal.WriteByte(pStopExtText, 0);

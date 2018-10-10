@@ -269,7 +269,8 @@
             "0",
             "1",
             "2",
-            "3"});
+            "3",
+            "4"});
             this.Hook0BytesPerRead_ComboBox.Location = new System.Drawing.Point(98, 232);
             this.Hook0BytesPerRead_ComboBox.Name = "Hook0BytesPerRead_ComboBox";
             this.Hook0BytesPerRead_ComboBox.Size = new System.Drawing.Size(42, 20);

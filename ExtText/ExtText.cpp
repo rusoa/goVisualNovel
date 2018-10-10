@@ -79,6 +79,7 @@ void __stdcall ExtText(
             {
                 ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_EXCEPTION_NOT_HANDLED);
             }
+
             //int3 break
             else if(dbe.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_BREAKPOINT)
             {
@@ -87,77 +88,63 @@ void __stdcall ExtText(
                 ctx.ContextFlags = CONTEXT_FULL;
                 if(!GetThreadContext(hThread, &ctx)) throw WM_EXT_TEXT_GET_CTX_FAILED;
 
-                if(seas.BytesLen > ExtBufferSize - HookersNum * 2) seas.BytesLen = 0; //impact resistant
-
                 int LastIdx = -1;
                 for(int i = 0; i < HookersNum; i++)
                 {
                     if(Hookers[i].Addr != dbe.u.Exception.ExceptionRecord.ExceptionAddress) continue;
 
-                    LastIdx = i;
-
                     if(!racer.status) racer.start();
+                    LastIdx = i;
+                    bool IsInnerAddr = true; //whether use * or ReadProcessMemory()
 
+                    //set the pValue
                     if(Hookers[i].EspBias < 0 && !Hookers[i].ValueAsAddr)
                     {
                         pValue = (char *)&ctx.Esp + Hookers[i].EspBias;
-                        if(Hookers[i].BytesPerRead > 0) //fixed bytes size
-                        {
-                            for(int c = 0; c < Hookers[i].BytesPerRead; c++)
-                            {
-                                racer.reset();
-                                *(ExtBuffer + seas.BytesLen++) = *((char *)((unsigned long)pValue + Hookers[i].BytesPerRead - c - 1));
-                            }
-                        }
-                        else
-                        {
-                            for(int c = 0; ; c++) //one sentence
-                            {
-                                racer.reset();
-                                *(ExtBuffer + seas.BytesLen++) = *((char *)((unsigned long)pValue + Hookers[i].BytesPerRead - c - 1));
-                                if(*(ExtBuffer + seas.BytesLen - 1) == 0) break;
-                            }
-                        }
+                        IsInnerAddr = false;
+                    }
+                    else if(Hookers[i].EspBias < 0)
+                    {
+                        pValue = *(void **)((char *)&ctx.Esp + Hookers[i].EspBias);
+                    }
+                    else if(!Hookers[i].ValueAsAddr)
+                    {
+                        pValue = (void *)(ctx.Esp + Hookers[i].EspBias);
                     }
                     else
                     {
-                        if(Hookers[i].EspBias < 0)
-                        {
-                            pValue = *(void **)((char *)&ctx.Esp + Hookers[i].EspBias);
-                        }
-                        else if(!Hookers[i].ValueAsAddr)
-                        {
-                            pValue = (void *)(ctx.Esp + Hookers[i].EspBias);
-                        }
-                        else
-                        {
-                            if(!ReadProcessMemory(hProc, (void *)(ctx.Esp + Hookers[i].EspBias), pValue, sizeof(void *), NULL))
-                                throw WM_EXT_TEXT_GET_MEM_FAILED;
-                        }
-                        if(Hookers[i].BytesPerRead > 0)
-                        {
-                            for(int c = 0; c < Hookers[i].BytesPerRead; c++) //fixed bytes size
-                            {
-                                racer.reset();
-                                if(!ReadProcessMemory(hProc, (void *)((char *)pValue + Hookers[i].ValueAsAddrBias + c), ExtBuffer + seas.BytesLen++, sizeof(char), NULL))
-                                    throw WM_EXT_TEXT_GET_MEM_FAILED;
-                            }
-                        }
-                        else
-                        {
-                            for(int c = 0; ; c++) //one sentence
-                            {
-                                racer.reset();
-                                if(!ReadProcessMemory(hProc, (void *)((char *)pValue + Hookers[i].ValueAsAddrBias + c), ExtBuffer + seas.BytesLen++, sizeof(char), NULL))
-                                    throw WM_EXT_TEXT_GET_MEM_FAILED;
-                                if(*(ExtBuffer + seas.BytesLen - 1) == 0) break;
-                            }
-                        }
+                        if(!ReadProcessMemory(hProc, (void *)(ctx.Esp + Hookers[i].EspBias), pValue, sizeof(void *), NULL))
+                            throw WM_EXT_TEXT_GET_MEM_FAILED;
                     }
 
-                    
+                    //read the bytes
+                    for(int c = 0; ; c++)
+                    {
+                        racer.reset();
+                        if(IsInnerAddr)
+                        {
+                            if(!ReadProcessMemory(hProc, (void *)((char *)pValue + Hookers[i].ValueAsAddrBias + c), ExtBuffer + seas.BytesLen++, sizeof(char), NULL))
+                                throw WM_EXT_TEXT_GET_MEM_FAILED;
+                        }
+                        else
+                        {
+                            *(ExtBuffer + seas.BytesLen++) = *((char *)((unsigned long)pValue + Hookers[i].BytesPerRead - c - 1));
+                        }
+
+                        if(seas.BytesLen >= ExtBufferSize) seas.BytesLen = 0; //impact resistant
+
+                        if(Hookers[i].BytesPerRead != 0) //fixed bytes
+                        {
+                            if(c >= Hookers[i].BytesPerRead - 1) break;
+                        }
+                        else                            //whole sentence
+                        {
+                            if(*(ExtBuffer + seas.BytesLen - 1) == 0) break;
+                        }
+                    }
                 }
-                if(LastIdx == -1)
+
+                if(LastIdx == -1) //not the goal addr
                 {
                     ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_EXCEPTION_NOT_HANDLED);
                 }
@@ -182,6 +169,7 @@ void __stdcall ExtText(
                     ContinueDebugEvent(dbe.dwProcessId, dbe.dwThreadId, DBG_CONTINUE);
                 }
             }
+
             //second break, reset the breakpoint
             else if(dbe.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_SINGLE_STEP)
             {
